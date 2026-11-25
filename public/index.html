@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ESPlay — Console maker educacional com ESP32</title>
+<meta name="description" content="Console portátil feito com ESP32 para a escola: imprima a carcaça em 3D, monte, jogue para aprender e acompanhe a turma pelo painel do professor.">
+<meta name="theme-color" content="#1F5EFF">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:title" content="ESPlay — Console maker educacional">
+<meta property="og:description" content="5 jogos educativos prontos, criador de quizzes personalizado e painel do professor com leitura via USB.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231F5EFF'/%3E%3Crect x='5' y='6' width='22' height='12' rx='2' fill='%2305070B'/%3E%3Crect x='7' y='21' width='7' height='3' fill='%23fff'/%3E%3Crect x='9' y='19' width='3' height='7' fill='%23fff'/%3E%3Ccircle cx='23' cy='23' r='3' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skiplink" href="#inicio">Pular para o conteúdo</a>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#inicio">ESP<b>lay</b></a>
+    <nav class="nav" aria-label="Seções do site">
+      <a href="#sobre">O projeto</a>
+      <a href="#construa">Construir</a>
+      <a href="#biblioteca">Jogos</a>
+      <a href="#criador">Criar jogo</a>
+      <a href="#professor">Professor</a>
+      <a href="#guia">Guia e FAQ</a>
+      <a href="#novidades">Em breve</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" id="inicio">
+
+  <div class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">Console maker educacional</p>
+      <h1>Construa o console. Jogue para aprender.</h1>
+      <p class="lead">O ESPlay é um console portátil feito com ESP32 que a turma imprime, monta e programa. Cada jogo ensina uma matéria, e o professor lê os recordes para ver quem precisa de ajuda.</p>
+      <div class="cta">
+        <a class="btn primary" href="#biblioteca">Ver os 5 jogos</a>
+        <a class="btn" href="#criador">Criar um quiz</a>
+        <a class="btn" href="#construa">Construir o meu</a>
+      </div>
+    </div>
+    <div class="hero-device">
+      <div id="hero-console"></div>
+      <p class="caption">Simulação do PixelMath na tela de 128×64 do primeiro protótipo. Você pode jogar com os botões.</p>
+    </div>
+  </div>
+
+  <section id="sobre">
+    <div class="sec-head">
+      <p class="eyebrow">O projeto</p>
+      <h2>Um console que a sala inteira constrói</h2>
+      <p>Inspirado no Arduboy e no ESPboy, o ESPlay tem um foco diferente: a escola. Montar o aparelho já é uma aula de eletrônica, e os jogos treinam conteúdos do 4º ao 9º ano.</p>
+    </div>
+    <div class="about">
+      <div class="text">
+        <h3>Objetivo</h3>
+        <p>Reunir jogos educativos de várias matérias em código aberto, para alunos e professores gravarem no console sem precisar programar do zero.</p>
+        <h3>Como o professor acompanha</h3>
+        <p>Cada jogo guarda no console o melhor placar, o número de partidas e os acertos e erros por assunto. Ao ligar o console no computador, o painel mostra o nível da turma e onde ela mais erra.</p>
+        <h3>Um jogo por vez</h3>
+        <p>Cada gravação coloca um jogo no console. Os recordes e o número do aluno continuam guardados quando você troca de jogo.</p>
+      </div>
+      <ol class="flow">
+        <li><div><b>Baixar os arquivos</b><span>Peças, esquema de ligação e modelos para impressão 3D.</span></div></li>
+        <li><div><b>Imprimir e montar</b><span>Os alunos montam o console com ajuda do professor e testam os botões.</span></div></li>
+        <li><div><b>Escolher ou criar um jogo</b><span>Na biblioteca de 5 jogos ou montando um quiz personalizado.</span></div></li>
+        <li><div><b>Gravar no ESP32</b><span>Copiar o código para a Arduino IDE e enviar ao console.</span></div></li>
+        <li><div><b>Jogar e acompanhar</b><span>O console volta ao computador e o painel mostra o aprendizado.</span></div></li>
+      </ol>
+    </div>
+
+    <div class="sketch-box">
+      <div class="stl-box" id="stl-viewer">
+        <canvas class="stl-canvas" role="img" aria-label="Visualizador 3D interativo da carcaça final do ESPlay"></canvas>
+        <div class="stl-bar">
+          <span class="muted small" data-stl-status>Carregando modelo 3D…</span>
+          <div class="stl-acts">
+            <button class="btn small" type="button" data-stl="in" aria-label="Aproximar modelo 3D">+</button>
+            <button class="btn small" type="button" data-stl="out" aria-label="Afastar modelo 3D">−</button>
+            <button class="btn small" type="button" data-stl="spin" aria-pressed="true">Pausar giro</button>
+            <button class="btn small" type="button" data-stl="reset">Resetar</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3>A carcaça em 3D</h3>
+        <p class="muted" style="margin-block: 6px 12px;">Versão final modelada no OpenSCAD em duas partes com fechamento por encaixe (<span class="mono">CaseESPboyV4.stl</span> · 190 × 135 × 29 mm).</p>
+        <ol class="legend">
+          <li>Tampa frontal com recorte da tela e furos dos botões</li>
+          <li>Cruzeta: cima, baixo, esquerda e direita</li>
+          <li>Botão de ação e compartimento interno para o ESP32</li>
+        </ol>
+        <div class="cta" style="margin-top: 16px;">
+          <a class="btn small primary" href="#construa-arquivos">Baixar o STL para imprimir</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TODO (hardware): confirmar lista real de peças, pinos do display ST7735, quinto botão, bibliotecas e liberar esquema -->
+  <section id="construa">
+    <div class="sec-head">
+      <p class="eyebrow">Construir o meu</p>
+      <h2>Peças, ligações e montagem</h2>
+      <p>Tudo o que a turma precisa para sair da caixa de peças até o primeiro jogo.</p>
+    </div>
+    <div class="build">
+      <div class="panel">
+        <h3>Peças</h3>
+        <ul>
+          <li>1 placa ESP32 (DevKit com ESP32-WROOM)</li>
+          <li>1 display LCD colorido ST7735, 128×160 (SPI)</li>
+          <li>5 botões táteis</li>
+          <li>Fios, ou solda em placa perfurada</li>
+          <li>Cabo USB que transmite dados</li>
+          <li>Carcaça impressa em 3D</li>
+        </ul>
+        <p class="muted">Alimentação por bateria ainda a definir.</p>
+      </div>
+      <div class="panel">
+        <h3>Ligações</h3>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Peça</th><th>Pino do ESP32</th></tr></thead>
+            <tbody>
+              <tr><td>Display (SPI)</td><td class="mono">a confirmar</td></tr>
+              <tr><td>Botão cima</td><td class="mono">GPIO 32</td></tr>
+              <tr><td>Botão baixo</td><td class="mono">GPIO 33</td></tr>
+              <tr><td>Botão esquerda</td><td class="mono">GPIO 25</td></tr>
+              <tr><td>Botão direita</td><td class="mono">GPIO 26</td></tr>
+              <tr><td>Botão ação</td><td class="mono">GPIO 27</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="muted">Pinos dos botões: padrão da biblioteca, a confirmar com a carcaça. Cada botão liga o pino ao GND, e o código usa o resistor interno do ESP32. Os pinos do display serão confirmados.</p>
+      </div>
+      <div class="panel">
+        <h3>Montagem e primeiro teste</h3>
+        <ol>
+          <li>Imprima a carcaça (<span class="mono">CaseESPboyV4.stl</span>) e ligue as peças conforme a tabela.</li>
+          <li>Na Arduino IDE, instale o suporte à placa <b>esp32 by Espressif Systems</b>.</li>
+          <li>Instale as bibliotecas do display (a lista será confirmada com o sketch do LCD).</li>
+          <li>Instale a biblioteca <b>ESPlay</b> pelo arquivo .zip (Sketch, Incluir Biblioteca, Adicionar .ZIP).</li>
+          <li>Grave o exemplo <b>TesteBotoes</b> e aperte cada botão. Cada um deve acender na tela.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="panel case-card" id="construa-arquivos">
+      <figure class="case-fig">
+        <img src="img/case-esplay.png" alt="Render 3D da carcaça final do ESPlay em duas partes: tampa com recorte da tela e furos dos 5 botões, e base interna para a placa." loading="lazy">
+        <figcaption class="caption">Modelo final em duas partes (<span class="mono">190 × 135 × 29 mm</span>).</figcaption>
+      </figure>
+      <div class="case-info">
+        <h3>Arquivos da carcaça e biblioteca</h3>
+        <p class="muted">A versão final da case (<span class="mono">CaseESPboyV4.stl</span>) já está pronta para fatiar e imprimir em 3D. Basta baixar o arquivo abaixo junto com a biblioteca <span class="mono">ESPlay.zip</span> para a Arduino IDE.</p>
+        <div class="downloads">
+          <a class="btn primary" href="downloads/CaseESPboyV4.stl" download="CaseESPboyV4.stl">Baixar carcaça 3D (.stl)</a>
+          <a class="btn" href="downloads/ESPlay.zip" download>Baixar a biblioteca ESPlay (.zip)</a>
+          <button class="btn" type="button" disabled>Esquema de ligação</button>
+          <span class="tag soon">Em breve</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="biblioteca">
+    <div class="sec-head">
+      <p class="eyebrow">Biblioteca de jogos</p>
+      <h2>Escolha o jogo e veja como ele funciona</h2>
+      <p>Filtre por matéria, abra a ficha de cada jogo, jogue a prévia no navegador e copie ou baixe o código pronto para a Arduino IDE.</p>
+    </div>
+
+    <div class="chips" role="group" aria-label="Filtrar por matéria" id="chips"></div>
+    <div class="cards" id="cards"></div>
+
+    <div class="detail" id="detail">
+      <div class="detail-head" id="detail-head"></div>
+
+      <div class="detail-play" id="detail-play" hidden>
+        <div class="detail-top">
+          <div class="hero-device">
+            <div id="lib-console"></div>
+            <p class="caption" id="lib-caption">No teclado: setas e Espaço para o botão de ação. A prévia ainda usa a tela de 128×64 do primeiro protótipo.</p>
+          </div>
+          <div class="detail-side">
+            <div>
+              <h3 class="side-title">O professor ajusta</h3>
+              <div class="fields" id="lib-fields"></div>
+              <p class="note">As escolhas acima atualizam a prévia e mudam o código do jogo abaixo.</p>
+            </div>
+            <div>
+              <h3 class="side-title">O que o console guarda (aluno 7)</h3>
+              <pre class="livejson" id="livejson" aria-live="off"></pre>
+              <p class="note">Os dados são gravados no fim de cada partida. É isso que o painel do professor lê pela USB.</p>
+              <div class="send-row"><button class="btn small" type="button" id="send-panel">Mandar para o painel (demonstração)</button> <span class="status" id="send-status" role="status"></span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="codebox">
+          <div class="codebar">
+            <b class="mono" id="code-filename">PixelMath.ino</b>
+            <div class="codebar-acts">
+              <button class="btn small" type="button" id="dl-code">Baixar .ino</button>
+              <button class="btn small primary" type="button" id="copy-code">Copiar código</button>
+            </div>
+          </div>
+          <pre><code id="code"></code></pre>
+        </div>
+
+        <div class="panel">
+          <h3>Como gravar no console</h3>
+          <ol class="steps">
+            <li>Instale a biblioteca ESPlay e as bibliotecas do display (veja a seção Construir).</li>
+            <li>Na Arduino IDE, abra o arquivo baixado ou cole o código copiado em um sketch novo.</li>
+            <li>Em Ferramentas, escolha a placa <b>ESP32 Dev Module</b> e a porta do console.</li>
+            <li>Clique em Carregar. Na primeira vez, o console pede o número do aluno.</li>
+            <li>Para manter os recordes ao trocar de jogo, deixe desligada a opção <b>Erase All Flash Before Sketch Upload</b>.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div id="detail-ficha"></div>
+    </div>
+  </section>
+
+  <section id="criador">
+    <div class="sec-head">
+      <p class="eyebrow">Criador de jogos</p>
+      <h2>Monte o seu quiz para o ESPlay</h2>
+      <p>Professores e alunos podem escrever perguntas, definir categorias para o painel, testar na prévia e baixar o código pronto para gravar no ESP32. Tudo fica salvo neste navegador.</p>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn small" type="button" id="cr-tpl-hist">Exemplo: História</button>
+      <button class="btn small" type="button" id="cr-tpl-ing">Exemplo: Inglês</button>
+      <button class="btn small" type="button" id="cr-tpl-blank">Começar do zero</button>
+      <button class="btn small" type="button" id="cr-json-up">Abrir quiz (.json)</button>
+      <button class="btn small" type="button" id="cr-json-dl">Salvar quiz (.json)</button>
+      <input type="file" id="cr-file-json" accept="application/json,.json" hidden>
+    </div>
+    <p class="status" id="cr-status" role="status"></p>
+
+    <div class="creator-grid">
+      <div class="creator-form">
+        <div class="panel">
+          <h3>1. Dados do jogo</h3>
+          <div class="creator-meta">
+            <label class="field" for="cr-nome">Nome do jogo
+              <input id="cr-nome" type="text" maxlength="24" placeholder="Ex.: Quiz Historia">
+            </label>
+            <label class="field" for="cr-id">ID no console (até 15 letras/números)
+              <input id="cr-id" type="text" maxlength="15" placeholder="Ex.: quizhistoria">
+            </label>
+            <label class="field" for="cr-materia">Matéria
+              <input id="cr-materia" type="text" maxlength="24" placeholder="Ex.: História">
+            </label>
+            <label class="field" for="cr-tag">Assunto no painel (sem aspas)
+              <input id="cr-tag" type="text" maxlength="15" placeholder="Ex.: periodo">
+            </label>
+            <label class="field" for="cr-ano">Ano escolar (opcional)
+              <input id="cr-ano" type="text" maxlength="40" placeholder="Ex.: 6º ano">
+            </label>
+            <label class="field" for="cr-total">Perguntas por partida
+              <select id="cr-total">
+                <option value="0">Todas</option>
+                <option value="5">5 perguntas</option>
+                <option value="10">10 perguntas</option>
+                <option value="15">15 perguntas</option>
+              </select>
+            </label>
+            <label class="field" for="cr-tempo">Tempo por pergunta
+              <select id="cr-tempo">
+                <option value="0">Sem limite</option>
+                <option value="15">15 segundos</option>
+                <option value="20">20 segundos</option>
+                <option value="30">30 segundos</option>
+              </select>
+            </label>
+            <label class="check" for="cr-emb">
+              <input id="cr-emb" type="checkbox" checked> Embaralhar ordem das perguntas
+            </label>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="qcard-head">
+            <h3>2. Categorias do painel (1 a 15)</h3>
+            <button class="btn small" type="button" id="cr-add-cat">+ Categoria</button>
+          </div>
+          <p class="muted small">Cada pergunta aponta para uma categoria, e o painel do professor mostra onde a turma erra mais.</p>
+          <div class="cats-list" id="cr-cats"></div>
+        </div>
+
+        <div class="panel">
+          <div class="qcard-head">
+            <h3>3. Perguntas (<span id="creator-qcount">0 perguntas</span>)</h3>
+            <button class="btn small primary" type="button" id="cr-add-q">+ Nova pergunta</button>
+          </div>
+          <p class="muted small">Na tela do console, o texto aparece sem acentos e em caixa simples. Use frases curtas e diretas.</p>
+          <div class="qcards" id="cr-questions"></div>
+        </div>
+      </div>
+
+      <div class="creator-side">
+        <div class="panel">
+          <div class="qcard-head">
+            <h3>Prévia ao vivo</h3>
+            <button class="btn small" type="button" id="cr-restart">Reiniciar prévia</button>
+          </div>
+          <div class="hero-device">
+            <div id="creator-console"></div>
+            <p class="caption">No teclado: setas cima/baixo para escolher e Espaço para confirmar.</p>
+          </div>
+          <div>
+            <h4 class="side-title">JSON que este jogo envia ao painel</h4>
+            <pre class="livejson" id="creator-livejson" aria-live="off"></pre>
+            <div class="send-row">
+              <button class="btn small" type="button" id="cr-send-panel">Mandar para o painel (demonstração)</button>
+              <span class="status" id="cr-send-status" role="status"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="codebox">
+          <div class="codebar">
+            <b class="mono" id="creator-ino-name">quizhistoria.ino</b>
+            <div class="codebar-acts">
+              <button class="btn small" type="button" id="cr-dl-code">Baixar .ino</button>
+              <button class="btn small primary" type="button" id="cr-copy-code">Copiar código</button>
+            </div>
+          </div>
+          <pre><code id="creator-code"></code></pre>
+        </div>
+
+        <details class="datamenu">
+          <summary>Quer publicar seu jogo na biblioteca do projeto?</summary>
+          <p class="note">Copie o item abaixo para enviar junto do arquivo <span class="mono">.ino</span> à equipe que mantém o <span class="mono">games.json</span>.</p>
+          <div class="toolbar">
+            <button class="btn small" type="button" id="cr-copy-lib">Copiar JSON da ficha</button>
+          </div>
+          <pre class="livejson" id="creator-lib-json"></pre>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section id="professor">
+    <div class="sec-head">
+      <p class="eyebrow">Painel do professor</p>
+      <h2>Veja quem aprendeu e onde a turma erra</h2>
+      <p>Ligue o console ao computador e leia os dados. Cada leitura fica guardada, então dá para ver a evolução de cada aluno. Tudo fica só neste navegador, sem enviar nada a servidores.</p>
+    </div>
+
+    <div class="banner" id="banner" hidden>
+      <span><b>Dados de exemplo.</b> Estes alunos e turmas não existem. Leia um console para ver os seus.</span>
+      <button class="btn small" type="button" id="rm-examples">Remover exemplos</button>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn primary" type="button" id="btn-serial">Ler console pela USB</button>
+      <button class="btn" type="button" id="btn-paste">Colar dados</button>
+    </div>
+
+    <div class="toolbar turmas-bar">
+      <label class="field" for="f-turma">Turma
+        <select id="f-turma"></select>
+      </label>
+      <label class="field" for="new-turma">Nova turma
+        <input id="new-turma" type="text" maxlength="30" placeholder="Ex.: 6º ano B">
+      </label>
+      <button class="btn small" type="button" id="btn-add-turma">Adicionar turma</button>
+      <button class="btn small" type="button" id="btn-rm-turma" disabled>Remover turma</button>
+    </div>
+
+    <details class="datamenu">
+      <summary>Dados e arquivos</summary>
+      <div class="toolbar">
+        <button class="btn small" type="button" id="btn-csv">Copiar CSV</button>
+        <button class="btn small" type="button" id="btn-csv-dl">Baixar resumo (CSV)</button>
+        <button class="btn small" type="button" id="btn-hist-dl">Baixar histórico (CSV)</button>
+        <button class="btn small" type="button" id="btn-json-dl">Salvar cópia (JSON)</button>
+        <button class="btn small" type="button" id="btn-json-up">Abrir cópia (JSON)</button>
+        <input type="file" id="file-json" accept="application/json,.json" hidden>
+        <button class="btn small" type="button" id="btn-clear">Limpar tudo</button>
+      </div>
+      <p class="note">O CSV usa ponto e vírgula e abre direto no Excel em português. A cópia (JSON) guarda tudo, inclusive nomes e turmas, para levar a outro computador. Quem recebe a cópia vê os nomes dos alunos.</p>
+    </details>
+
+    <p class="status" id="p-status" role="status"></p>
+
+    <div class="pastebox" id="pastebox" hidden>
+      <label for="paste-area" style="font-weight:700;">Cole as linhas que o console envia pelo Monitor Serial</label>
+      <textarea id="paste-area" spellcheck="false" placeholder='{"esplay":1,"student":12,"game":"pixelmath", ...}'></textarea>
+      <div class="row"><button class="btn small primary" type="button" id="paste-add">Adicionar</button></div>
+    </div>
+
+    <div class="csvbox" id="csvbox" hidden>
+      <label for="csv-area" style="font-weight:700;">CSV (selecione e copie)</label>
+      <textarea id="csv-area" readonly></textarea>
+    </div>
+
+    <div class="dash">
+      <div class="panel nopad">
+        <div class="tablewrap">
+          <table class="grid" style="min-width:920px;">
+            <thead>
+              <tr><th>Aluno</th><th>Turma</th><th>Jogo</th><th class="num">Partidas</th><th class="num">Melhor</th><th>Acertos</th><th>Evolução</th><th>Mais erra</th><th>Nível</th><th></th></tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Onde a turma mais erra</h3>
+        <label class="field" for="bars-game">Jogo
+          <select id="bars-game"></select>
+        </label>
+        <p class="muted small" id="bars-sub"></p>
+        <div class="bars" id="bars"></div>
+      </div>
+    </div>
+
+    <div class="ficha-panel" id="ficha" hidden></div>
+
+    <p class="note">Nível pela taxa de acerto: abaixo de 70% precisa de apoio, de 70% a 84% em desenvolvimento, 85% ou mais consolidado. Os limites são uma sugestão inicial. O assunto que mais erra só aparece depois de 3 tentativas nele. A coluna Evolução mostra o acerto entre leituras seguidas, e a seta compara as duas últimas.</p>
+  </section>
+
+  <section id="guia">
+    <div class="sec-head">
+      <p class="eyebrow">Guia do professor e FAQ</p>
+      <h2>Dúvidas comuns em sala de aula</h2>
+      <p>Orientações rápidas para montar o ambiente, gravar os jogos nos consoles e ler as estatísticas sem dor de cabeça.</p>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item">
+        <summary>Como definir ou trocar o número do aluno no console?</summary>
+        <p>Na primeira vez que o jogo é gravado, o ESPlay pede o número do aluno (1 a 999). Use <b>Cima/Baixo</b> para mudar de 1 em 1, <b>Esquerda/Direita</b> de 10 em 10 e <b>Ação</b> para salvar. Para trocar o número depois, segure <b>Esquerda + Direita</b> ao ligar o console, ou envie <span class="mono">ID 12</span> pelo Monitor Serial a 115200 baud.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Se eu gravar outro jogo, perco os recordes ou o número do aluno?</summary>
+        <p>Não, desde que a opção <b>Erase All Flash Before Sketch Upload</b> esteja desativada no menu Ferramentas da Arduino IDE. Cada jogo grava suas estatísticas em um espaço próprio da memória flash (usando o <span class="mono">gameId</span>) e o número do aluno fica salvo separado.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Por que as palavras aparecem sem acento na tela do console?</summary>
+        <p>A fonte padrão da biblioteca gráfica usada no ESP32 só tem caracteres ASCII simples (sem acentos nem cedilha). O site e o Criador de jogos já removem os acentos na tela simulada e no código <span class="mono">.ino</span> automaticamente, mantendo os acentos normais nas fichas e no painel do professor.</p>
+      </details>
+      <details class="faq-item">
+        <summary>O botão "Ler console pela USB" não funciona no meu navegador. O que faço?</summary>
+        <p>A leitura direta pela USB usa a API Web Serial, disponível no <b>Google Chrome</b> e no <b>Microsoft Edge</b> para computador. Em outros navegadores (como Firefox ou Safari), abra o Monitor Serial da Arduino IDE a <b>115200 baud</b>, envie <span class="mono">ESPLAY?</span>, copie a linha JSON que o console responder e use o botão <b>Colar dados</b> no painel.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Os nomes dos alunos ficam salvos em algum servidor?</summary>
+        <p>Não. Por respeito à LGPD e à privacidade escolar, o console guarda apenas o número do aluno, e o site salva nomes, turmas e leituras exclusivamente no navegador deste computador (<span class="mono">localStorage</span>). Use <b>Salvar cópia (JSON)</b> para transferir a turma para outro computador.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Como compartilhar um jogo criado no Criador de jogos com outros professores?</summary>
+        <p>No Criador de jogos, use <b>Salvar quiz (.json)</b> para passar as perguntas a outro professor (que pode reabrir o arquivo em <b>Abrir quiz (.json)</b> e editar), ou baixe o arquivo <span class="mono">.ino</span> pronto e o trecho de JSON da ficha para incluir o jogo na biblioteca do projeto.</p>
+      </details>
+    </div>
+  </section>
+
+  <section id="novidades">
+    <div class="sec-head">
+      <p class="eyebrow">Em breve</p>
+      <h2>O que ainda depende do console físico</h2>
+    </div>
+    <div class="road">
+      <div class="panel"><span class="tag soon">Aguardando hardware</span><h3>Prévia e biblioteca na tela colorida</h3><p class="muted">O console já usa o LCD ST7735 de 128×160. Faltam confirmar os pinos do display, as bibliotecas e a orientação (em pé ou deitada) para atualizar a engine e a prévia do site.</p></div>
+      <div class="panel"><span class="tag soon">Aguardando hardware</span><h3>Esquema de ligação e lista final</h3><p class="muted">O STL final (<span class="mono">CaseESPboyV4.stl</span>) já está disponível para download e visualização 3D. Faltam apenas o esquema definitivo de pinos e a lista final de peças com bateria.</p></div>
+      <div class="panel"><span class="tag soon">Próximo passo</span><h3>Leitura real pela USB</h3><p class="muted">Confirmar com o console montado a resposta ao comando serial do painel e avaliar gravação direta pelo navegador.</p></div>
+      <div class="panel"><span class="tag soon">Futuro</span><h3>Biblioteca comunitária</h3><p class="muted">Espaço para receber e publicar quizzes criados por professores de outras escolas.</p></div>
+    </div>
+  </section>
+
+</main>
+
+<div class="wrap">
+  <footer>
+    <span><b>ESPlay</b>, console maker educacional</span>
+    <span>Versão de demonstração. Os dados marcados como exemplo são fictícios.</span>
+  </footer>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

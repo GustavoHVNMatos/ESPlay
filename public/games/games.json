@@ -1,0 +1,144 @@
+{
+  "_ajuda": "Cada jogo da biblioteca é um item desta lista. O id deve ser igual ao gameId usado no esp.begin() do sketch. status: disponivel ou em-breve. preview: nome da prévia jogável.",
+  "games": [
+    {
+      "id": "pixelmath",
+      "nome": "PixelMath",
+      "materia": "Matemática",
+      "assunto": "Tabuada (multiplicação)",
+      "tag": "tabuada",
+      "ano": null,
+      "modelo": "Respostas caindo",
+      "status": "disponivel",
+      "preview": "pixelmath",
+      "arquivo": "games/pixelmath.ino",
+      "resumo": "Respostas caem em três colunas. Fique na coluna da conta certa antes que elas cheguem embaixo.",
+      "treina": "Multiplicar de 1 a 9 com rapidez.",
+      "comoJoga": [
+        ["Esquerda e direita", "Trocam de coluna"],
+        ["Ação", "Começa e reinicia a partida"]
+      ],
+      "categorias": ["1 a 9: a tabuada da conta (a do 7 é a categoria 7)"],
+      "tagModelo": "Tabuada do {n}",
+      "aoErrar": "A tela mostra a conta e a resposta certa.",
+      "professorAjusta": "Fixar uma tabuada (1 a 9) ou sortear todas, e escolher a velocidade inicial.",
+      "fimPartida": "O primeiro erro termina a partida.",
+      "observacao": null
+    },
+    {
+      "id": "acentoquest",
+      "nome": "AcentoQuest",
+      "materia": "Português",
+      "assunto": "Tonicidade das palavras",
+      "tag": "tonicidade",
+      "ano": "5º ao 7º ano do Ensino Fundamental",
+      "modelo": "Quiz de múltipla escolha",
+      "status": "disponivel",
+      "preview": "acentoquest",
+      "arquivo": "games/acentoquest.ino",
+      "resumo": "Uma palavra aparece na tela e o aluno classifica: oxítona, paroxítona ou proparoxítona.",
+      "treina": "Achar a sílaba tônica de uma palavra e classificá-la.",
+      "comoJoga": [
+        ["Cima e baixo", "Alternam entre as três opções: 1. OXITONA, 2. PAROXITONA, 3. PROPAROXITONA"],
+        ["Esquerda e direita", "Não usados"],
+        ["Ação", "Confirma a escolha e inicia ou reinicia a partida"]
+      ],
+      "categorias": ["1 oxítonas", "2 paroxítonas", "3 proparoxítonas"],
+      "tagRotulos": { "1": "Oxítonas", "2": "Paroxítonas", "3": "Proparoxítonas" },
+      "aoErrar": "Mostra a palavra com a sílaba tônica em destaque e a regra, em várias linhas (ex.: TODAS PROPAROXITONAS SAO ACENTUADAS).",
+      "professorAjusta": "Fixar uma categoria para treino focado, ou sortear as três, e definir quantas perguntas entram na rodada.",
+      "fimPartida": "10 perguntas por rodada (ajustável pelo professor para 5, 10 ou 15).",
+      "observacao": "As palavras aparecem sem acento por causa da fonte do console. O banco evita palavras que ficam ambíguas sem acento (como SABIA) e guarda a sílaba tônica de cada palavra."
+    },
+    {
+      "id": "ciclofis",
+      "nome": "CicloFis",
+      "materia": "Ciências",
+      "assunto": "Mudanças de estado físico",
+      "tag": "mudanca",
+      "ano": "6º ao 8º ano do Ensino Fundamental",
+      "modelo": "Quiz de múltipla escolha",
+      "status": "disponivel",
+      "preview": "ciclofis",
+      "arquivo": "games/ciclofis.ino",
+      "resumo": "Um fenômeno do dia a dia aparece no topo e o aluno escolhe a mudança de estado que ele representa.",
+      "treina": "Ligar um fenômeno do dia a dia à mudança de estado que ele representa.",
+      "comoJoga": [
+        ["Cima e baixo", "Alternam entre 3 opções de mudança de estado"],
+        ["Esquerda e direita", "Não usados"],
+        ["Ação", "Confirma a escolha e inicia ou reinicia a partida"]
+      ],
+      "categorias": [
+        "1 fusão (sólido → líquido)",
+        "2 vaporização (líquido → gasoso)",
+        "3 solidificação (líquido → sólido)",
+        "4 condensação (gasoso → líquido)",
+        "5 sublimação (sólido → gasoso)"
+      ],
+      "tagRotulos": { "1": "Fusão", "2": "Vaporização", "3": "Solidificação", "4": "Condensação", "5": "Sublimação" },
+      "aoErrar": "O jogo pausa por cerca de 2 segundos mostrando a mudança correta e o sentido dela (ex.: FUSAO: SOLIDO PARA LIQUIDO) e segue.",
+      "professorAjusta": "Quais mudanças de estado entram na rodada, tempo por pergunta e total de perguntas.",
+      "fimPartida": "10 perguntas por rodada (ajustável pelo professor).",
+      "observacao": "A ideia original usava respostas caindo em 3 colunas, mas nomes como VAPORIZACAO e SOLIDIFICACAO não cabem em uma coluna de cerca de 7 letras. Por isso o formato passou a quiz."
+    },
+    {
+      "id": "regiomap",
+      "nome": "RegioMap",
+      "materia": "Geografia",
+      "assunto": "Estados e capitais do Brasil",
+      "tag": "regiao",
+      "ano": "4º ao 6º ano do Ensino Fundamental",
+      "modelo": "Quiz de múltipla escolha",
+      "status": "disponivel",
+      "preview": "regiomap",
+      "arquivo": "games/regiomap.ino",
+      "resumo": "O nome de um estado aparece no topo e o aluno escolhe a capital certa entre três opções.",
+      "treina": "Associar cada estado à sua capital.",
+      "comoJoga": [
+        ["Cima e baixo", "Alternam entre 3 capitais listadas na tela"],
+        ["Esquerda e direita", "Não usados"],
+        ["Ação", "Confirma a escolha e inicia ou reinicia a partida"]
+      ],
+      "categorias": ["Região do estado perguntado: 1 Norte, 2 Nordeste, 3 Centro-Oeste, 4 Sudeste, 5 Sul"],
+      "tagRotulos": { "1": "Norte", "2": "Nordeste", "3": "Centro-Oeste", "4": "Sudeste", "5": "Sul" },
+      "aoErrar": "Congela a tela mostrando o estado, a capital correta e a região (ex.: BAHIA: SALVADOR) até apertar Ação.",
+      "professorAjusta": "Incluir todas as regiões ou limitar a partida a uma só, além da quantidade de perguntas.",
+      "fimPartida": "10 perguntas por rodada (ajustável para 5, 10, 15 ou todas as 27 UFs).",
+      "observacao": "A ideia original misturava \"atirar na resposta certa\" com colunas. O formato passou a quiz porque capitais como SALVADOR e FLORIANOPOLIS não cabem em uma coluna de cerca de 7 letras. O banco tem as 27 unidades da federação (26 estados e o Distrito Federal)."
+    },
+    {
+      "id": "algoritmando",
+      "nome": "Algoritmando",
+      "materia": "Lógica e programação",
+      "assunto": "Sequências e padrões de comandos",
+      "tag": "padrao",
+      "ano": "6º ao 9º ano do Ensino Fundamental, ou iniciação tecnológica",
+      "modelo": "Completar a sequência",
+      "status": "disponivel",
+      "preview": "algoritmando",
+      "arquivo": "games/algoritmando.ino",
+      "resumo": "Uma sequência de setas aparece com uma lacuna e o aluno aperta a seta que completa o padrão.",
+      "treina": "Descobrir a regra de uma sequência e dizer qual é o próximo comando.",
+      "comoJoga": [
+        ["Cima, baixo, esquerda e direita", "Cada botão é a resposta: o aluno aperta a seta que completa a sequência"],
+        ["Ação", "Inicia e reinicia a partida"]
+      ],
+      "categorias": [
+        "1 padrão de 2 comandos que se repetem",
+        "2 padrão de 3 comandos que se repetem",
+        "3 padrão em que cada comando é seguido do oposto",
+        "4 padrão em pares (cada comando repete 2 vezes)"
+      ],
+      "tagRotulos": {
+        "1": "Padrão de 2 comandos",
+        "2": "Padrão de 3 comandos",
+        "3": "Padrão com oposto",
+        "4": "Padrão em pares"
+      },
+      "aoErrar": "Mostra a regra do padrão em poucas palavras (ex.: REPETE: CIMA, DIR) e a seta certa.",
+      "professorAjusta": "Complexidade dos padrões, limite de tempo por rodada e total de rodadas.",
+      "fimPartida": "10 rodadas por partida (ajustável pelo professor).",
+      "observacao": "Como a resposta é um botão de seta, os padrões numéricos (+2, x2) e os comandos se/então ficaram fora da primeira versão e podem virar jogos futuros. O nome tem 12 letras e não cabe em letra grande no título do console."
+    }
+  ]
+}
