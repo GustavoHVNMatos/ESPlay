@@ -181,7 +181,7 @@ function generateIno(st) {
 
   const items = validQs
     .map((q) => {
-      const ops = [0, 1, 2].map((i) => `"${cppStr(q.opcoes[i] || '-').slice(0, 18)}"`);
+      const ops = [0, 1, 2].map((i) => `"${cppStr(q.opcoes[i] || '-').slice(0, 20)}"`);
       const cat = Math.max(0, Math.min(15, parseInt(q.cat, 10) || 1));
       const cor = Math.max(0, Math.min(2, parseInt(q.correta, 10) || 0));
       return `  {"${cppStr(q.pergunta).slice(0, 64)}", {${ops.join(', ')}}, ${cor}, ${cat}, "${cppStr(q.explicacao || '').slice(0, 48)}"}`;
@@ -192,27 +192,171 @@ function generateIno(st) {
   ${gameName} — quiz criado no site do ESPlay
   -------------------------------------------------
   Materia: ${cppStr(st.materia || 'Geral')}   |   Area: ${tagName}
+  Placa: ESP32 DevKit V1 (30 pinos)
+  Display: TFT 1.8" 128x160 ST7735S (SPI, paisagem 160x128)
+    SCL->18 | SDA->23 | RST->4 | DC->2 | CS->5 | BLK->3V3
+  Botoes (INPUT_PULLUP para GND):
+    CIMA->32 | BAIXO->33 | ESQUERDA->26 | DIREITA->27 | ACAO->25
 
-  Requer a biblioteca ESPlay (instalar uma unica vez).
+  Bibliotecas: Adafruit GFX Library + Adafruit ST7735 and ST7789 Library
   Categorias no painel do professor:
 ${catComment || '//     1 = Geral'}
 */
 
-#include <ESPlay.h>
-
-ESPlay esp;
+#include <SPI.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_ST7735.h>
+#include <Preferences.h>
 
 // ====== AJUSTES PARA O PROFESSOR ======
 const int  QTD_PERGUNTAS  = ${parseInt(st.total, 10) || 0};     // 0 = todas do banco
 const int  TEMPO_PERGUNTA = ${parseInt(st.tempo, 10) || 0};     // segundos por pergunta (0 = sem limite)
 const bool EMBARALHAR     = ${st.embaralhar ? 'true' : 'false'};  // sortear ordem das perguntas
+const bool PEDIR_ALUNO    = true;   // pede numero do aluno no primeiro uso
 // ======================================
 
+#define UP_BUTTON    32
+#define DOWN_BUTTON  33
+#define LEFT_BUTTON  26
+#define RIGHT_BUTTON 27
+#define FIRE_BUTTON  25
+
+#define TFT_CS   5
+#define TFT_DC   2
+#define TFT_RST  4
+
+Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
+
+const int W = 160;
+const int H = 128;
+
+#define COL_BG     ST7735_BLACK
+#define COL_GRAY   0x7BEF
+#define COL_DKGRAY 0x39E7
+
+// ---------- Estatisticas e serial (painel do professor) ----------
+const char* GAME_ID   = "${gameId}";
+const char* GAME_NAME = "${gameName}";
+const char* TAG_NAME  = "${tagName}";
+
+struct ESPlayStats {
+  uint32_t magic; int32_t best; uint32_t plays, hits, misses;
+  int32_t last[10]; uint8_t lastCount; uint16_t tagHits[16], tagMisses[16];
+};
+Preferences prefs;
+ESPlayStats stats;
+uint16_t studentId = 0;
+uint32_t pendHits = 0, pendMisses = 0;
+uint16_t pendTH[16], pendTM[16];
+char serialBuf[24]; uint8_t serialLen = 0; bool idSaved = false;
+
+void drawCentered(const char* s, int y, uint8_t size, uint16_t color) {
+  int16_t x1, y1; uint16_t w, h;
+  tft.setTextSize(size);
+  tft.getTextBounds(s, 0, 0, &x1, &y1, &w, &h);
+  tft.setCursor((W - (int)w) / 2, y);
+  tft.setTextColor(color);
+  tft.print(s);
+}
+
+void saveStudentId(uint16_t id) {
+  studentId = id; idSaved = true;
+  Preferences idp; idp.begin("esplay", false); idp.putUShort("sid", id); idp.end();
+}
+void loadStats() {
+  prefs.begin(GAME_ID, false);
+  size_t n = prefs.getBytes("stats", &stats, sizeof(stats));
+  if (n != sizeof(stats) || stats.magic != 0xE5A10001) { memset(&stats, 0, sizeof(stats)); stats.magic = 0xE5A10001; }
+}
+void saveStats() { prefs.putBytes("stats", &stats, sizeof(stats)); }
+
+void sendJson() {
+  Serial.print(F("{\\"esplay\\":1,\\"student\\":")); Serial.print(studentId);
+  Serial.print(F(",\\"game\\":\\"")); Serial.print(GAME_ID);
+  Serial.print(F("\\",\\"name\\":\\"")); Serial.print(GAME_NAME);
+  Serial.print(F("\\",\\"tag\\":\\"")); Serial.print(TAG_NAME);
+  Serial.print(F("\\",\\"best\\":")); Serial.print(stats.best);
+  Serial.print(F(",\\"plays\\":")); Serial.print(stats.plays);
+  Serial.print(F(",\\"hits\\":")); Serial.print(stats.hits);
+  Serial.print(F(",\\"misses\\":")); Serial.print(stats.misses);
+  Serial.print(F(",\\"last\\":["));
+  for (int i = 0; i < stats.lastCount; i++) { if (i) Serial.print(','); Serial.print(stats.last[i]); }
+  Serial.print(F("],\\"tagHits\\":["));
+  for (int i = 0; i < 16; i++) { if (i) Serial.print(','); Serial.print(stats.tagHits[i]); }
+  Serial.print(F("],\\"tagMisses\\":["));
+  for (int i = 0; i < 16; i++) { if (i) Serial.print(','); Serial.print(stats.tagMisses[i]); }
+  Serial.println(F("]}"));
+}
+
+void handleSerial() {
+  while (Serial.available()) {
+    char c = (char)Serial.read();
+    if (c == '\\n' || c == '\\r') {
+      if (serialLen > 0) {
+        serialBuf[serialLen] = 0; serialLen = 0;
+        String cmd(serialBuf); cmd.trim(); cmd.toUpperCase();
+        if (cmd == "ESPLAY?" || cmd == "DUMP") sendJson();
+        else if (cmd.startsWith("ID ")) {
+          int n = cmd.substring(3).toInt();
+          if (n >= 1 && n <= 999) { saveStudentId((uint16_t)n); Serial.println(F("OK")); }
+          else Serial.println(F("ERRO"));
+        } else if (cmd == "RESET") {
+          memset(&stats, 0, sizeof(stats)); stats.magic = 0xE5A10001; saveStats(); Serial.println(F("OK"));
+        }
+      }
+    } else if (serialLen < sizeof(serialBuf) - 1) serialBuf[serialLen++] = c;
+  }
+}
+
+void recordHit(uint8_t tag) { pendHits++; if (tag < 16) pendTH[tag]++; }
+void recordMiss(uint8_t tag) { pendMisses++; if (tag < 16) pendTM[tag]++; }
+void resetPend() { pendHits = pendMisses = 0; memset(pendTH, 0, sizeof(pendTH)); memset(pendTM, 0, sizeof(pendTM)); }
+
+bool finishGame(int sc) {
+  bool rec = sc > stats.best; if (rec) stats.best = sc;
+  stats.plays++; stats.hits += pendHits; stats.misses += pendMisses;
+  for (int i = 0; i < 16; i++) { stats.tagHits[i] += pendTH[i]; stats.tagMisses[i] += pendTM[i]; }
+  if (stats.lastCount < 10) stats.last[stats.lastCount++] = sc;
+  else { memmove(stats.last, stats.last + 1, sizeof(int32_t) * 9); stats.last[9] = sc; }
+  saveStats(); resetPend();
+  return rec;
+}
+
+void promptStudentId() {
+  int n = studentId ? studentId : 1;
+  bool prev[5] = {true, true, true, true, true};
+  int pins[5] = {UP_BUTTON, DOWN_BUTTON, LEFT_BUTTON, RIGHT_BUTTON, FIRE_BUTTON};
+  idSaved = false; bool dirty = true;
+  while (!idSaved) {
+    handleSerial();
+    bool now[5]; for (int i = 0; i < 5; i++) now[i] = (digitalRead(pins[i]) == LOW);
+    if (now[0] && !prev[0]) { n++; dirty = true; }
+    if (now[1] && !prev[1]) { n--; dirty = true; }
+    if (now[3] && !prev[3]) { n += 10; dirty = true; }
+    if (now[2] && !prev[2]) { n -= 10; dirty = true; }
+    if (n < 1) n = 1; if (n > 999) n = 999;
+    bool ok = now[4] && !prev[4];
+    for (int i = 0; i < 5; i++) prev[i] = now[i];
+    if (dirty) {
+      tft.fillScreen(COL_BG);
+      drawCentered("SEU NUMERO", 12, 2, ST7735_CYAN);
+      char buf[8]; snprintf(buf, sizeof(buf), "%d", n);
+      drawCentered(buf, 46, 3, ST7735_YELLOW);
+      drawCentered("CIMA/BAIXO: +-1  LADOS: +-10", 96, 1, COL_GRAY);
+      drawCentered("ACAO: confirmar", 110, 1, ST7735_GREEN);
+      dirty = false;
+    }
+    if (ok) { saveStudentId((uint16_t)n); tft.fillScreen(COL_BG); drawCentered("SALVO!", 52, 2, ST7735_GREEN); delay(600); }
+    delay(20);
+  }
+}
+
+// ---------- Banco e logica do quiz ----------
 struct Pergunta {
   const char* enunciado;
   const char* opcoes[3];
-  uint8_t correta;      // 0, 1 ou 2
-  uint8_t cat;          // categoria (0..15)
+  uint8_t correta;
+  uint8_t cat;
   const char* explicacao;
 };
 
@@ -225,27 +369,18 @@ const int NUM_PERGUNTAS = sizeof(BANCO) / sizeof(BANCO[0]);
 enum Tela { TITULO, JOGANDO, ACERTO, FEEDBACK, FIM };
 Tela tela = TITULO;
 
-int ordem[NUM_PERGUNTAS];
-int posOrdem = 0;
-int perguntaAtual = 0;
-int totalRodada = 0;
-int selecao = 0;
-int acertos = 0;
-int score = 0;
-bool novoRecorde = false;
-bool tempoEsgotado = false;
-int timerFrames = 0;
-int esperaFrames = 0;
+int ordem[NUM_PERGUNTAS], posOrdem = 0;
+int perguntaAtual = 0, totalRodada = 0, selecao = 0, acertos = 0, score = 0;
+bool novoRecorde = false, tempoEsgotado = false, needsRedraw = true;
+int timerFrames = 0, esperaFrames = 0, ultimoSeg = -1;
 Pergunta atual;
+unsigned long tickTimer = 0;
 
 void prepararOrdem() {
   for (int i = 0; i < NUM_PERGUNTAS; i++) ordem[i] = i;
   if (EMBARALHAR) {
     for (int i = NUM_PERGUNTAS - 1; i > 0; i--) {
-      int j = random(0, i + 1);
-      int tmp = ordem[i];
-      ordem[i] = ordem[j];
-      ordem[j] = tmp;
+      int j = random(0, i + 1); int tmp = ordem[i]; ordem[i] = ordem[j]; ordem[j] = tmp;
     }
   }
   posOrdem = 0;
@@ -254,198 +389,165 @@ void prepararOrdem() {
 void proximaPergunta() {
   if (posOrdem >= NUM_PERGUNTAS) prepararOrdem();
   atual = BANCO[ordem[posOrdem++]];
-  selecao = 0;
-  tempoEsgotado = false;
+  selecao = 0; tempoEsgotado = false; ultimoSeg = -1;
   timerFrames = (TEMPO_PERGUNTA > 0) ? TEMPO_PERGUNTA * 30 : 0;
-  perguntaAtual++;
-  tela = JOGANDO;
+  perguntaAtual++; tela = JOGANDO; needsRedraw = true;
 }
 
 void novoJogo() {
   totalRodada = (QTD_PERGUNTAS > 0 && QTD_PERGUNTAS < NUM_PERGUNTAS) ? QTD_PERGUNTAS : NUM_PERGUNTAS;
-  perguntaAtual = 0;
-  acertos = 0;
-  score = 0;
-  novoRecorde = false;
-  prepararOrdem();
-  proximaPergunta();
+  perguntaAtual = 0; acertos = 0; score = 0; novoRecorde = false;
+  resetPend(); prepararOrdem(); proximaPergunta();
 }
 
 void avancarOuFim() {
-  if (perguntaAtual >= totalRodada) {
-    novoRecorde = esp.gameOver(score);
-    tela = FIM;
-  } else {
-    proximaPergunta();
-  }
+  if (perguntaAtual >= totalRodada) { novoRecorde = finishGame(score); tela = FIM; needsRedraw = true; }
+  else proximaPergunta();
 }
 
-void textoQuebrado(int x, int y, int maxLarg, int altLinha, const char* s) {
-  int maxChars = maxLarg / 6;
-  if (maxChars < 4) maxChars = 4;
-  int len = strlen(s);
-  int pos = 0;
-  int cy = y;
+void textoQuebrado(int x, int y, int maxLarg, int altLinha, const char* s, uint16_t color) {
+  int maxChars = maxLarg / 6; if (maxChars < 4) maxChars = 4;
+  int len = strlen(s), pos = 0, cy = y;
+  tft.setTextSize(1); tft.setTextColor(color);
   while (pos < len) {
     while (pos < len && s[pos] == ' ') pos++;
     if (pos >= len) break;
     int fim = pos + maxChars;
-    if (fim >= len) {
-      fim = len;
-    } else {
-      int k = fim;
-      while (k > pos && s[k] != ' ') k--;
-      if (k > pos) fim = k;
-    }
-    char linha[32];
-    int n = fim - pos;
-    if (n >= (int)sizeof(linha)) n = sizeof(linha) - 1;
-    memcpy(linha, s + pos, n);
-    linha[n] = 0;
-    esp.text(x, cy, linha, 1);
-    cy += altLinha;
-    pos = fim;
-  }
-}
-
-void atualizar() {
-  if (tela == TITULO || tela == FIM) {
-    if (esp.pressed(BTN_ACTION)) novoJogo();
-    return;
-  }
-
-  if (tela == ACERTO) {
-    esperaFrames--;
-    if (esperaFrames <= 0 || esp.pressed(BTN_ACTION)) avancarOuFim();
-    return;
-  }
-
-  if (tela == FEEDBACK) {
-    if (esp.pressed(BTN_ACTION)) avancarOuFim();
-    return;
-  }
-
-  if (esp.pressed(BTN_UP)) selecao = (selecao + 2) % 3;
-  if (esp.pressed(BTN_DOWN)) selecao = (selecao + 1) % 3;
-
-  if (TEMPO_PERGUNTA > 0) {
-    timerFrames--;
-    if (timerFrames <= 0) {
-      esp.recordMiss(atual.cat);
-      tempoEsgotado = true;
-      tela = FEEDBACK;
-      return;
-    }
-  }
-
-  if (esp.pressed(BTN_ACTION)) {
-    if (selecao == atual.correta) {
-      score += 10;
-      acertos++;
-      esp.recordHit(atual.cat);
-      esperaFrames = 18;
-      tela = ACERTO;
-    } else {
-      esp.recordMiss(atual.cat);
-      tempoEsgotado = false;
-      tela = FEEDBACK;
-    }
+    if (fim >= len) fim = len;
+    else { int k = fim; while (k > pos && s[k] != ' ') k--; if (k > pos) fim = k; }
+    char linha[32]; int n = fim - pos; if (n >= (int)sizeof(linha)) n = sizeof(linha) - 1;
+    memcpy(linha, s + pos, n); linha[n] = 0;
+    tft.setCursor(x, cy); tft.print(linha);
+    cy += altLinha; pos = fim;
   }
 }
 
 void desenhar() {
-  int w = esp.width();
-  int h = esp.height();
-  esp.clear();
+  tft.fillScreen(COL_BG);
 
   if (tela == TITULO) {
-    uint8_t sz = ((int)strlen("${titleUpper}") * 12 <= w - 4) ? 2 : 1;
-    esp.textCenter(w / 2, sz == 2 ? 0 : 4, "${titleUpper}", sz);
-    esp.text(0, 22, "Aluno:");
-    esp.number(42, 22, esp.studentId());
-    esp.text(0, 33, "Recorde:");
-    esp.number(54, 33, esp.best());
-    esp.textCenter(w / 2, h - 10, "Aperte ACAO", 1);
-    esp.show();
+    uint8_t sz = ((int)strlen("${titleUpper}") * 12 <= W - 12) ? 2 : 1;
+    drawCentered("${titleUpper}", sz == 2 ? 12 : 16, sz, ST7735_CYAN);
+    drawCentered("Quiz personalizado", 36, 1, COL_GRAY);
+    char buf[24];
+    snprintf(buf, sizeof(buf), "Aluno: %d", studentId); drawCentered(buf, 58, 1, ST7735_WHITE);
+    snprintf(buf, sizeof(buf), "Recorde: %ld", (long)stats.best); drawCentered(buf, 74, 1, ST7735_YELLOW);
+    drawCentered("Aperte ACAO", 104, 1, ST7735_GREEN);
     return;
   }
 
   if (tela == FIM) {
-    esp.textCenter(w / 2, 0, "FIM DA RODADA", 1);
-    esp.line(0, 10, w - 1, 10, true);
+    drawCentered("FIM DA RODADA", 10, 1, ST7735_CYAN);
+    tft.drawFastHLine(0, 22, W, COL_DKGRAY);
     char resumo[24];
-    snprintf(resumo, sizeof(resumo), "Acertos: %d/%d", acertos, totalRodada);
-    esp.text(0, 15, resumo);
-    esp.text(0, 26, "Pts:");
-    esp.number(30, 26, score);
-    if (novoRecorde) {
-      esp.text(0, 38, "NOVO RECORDE!");
-    } else {
-      esp.text(0, 38, "Recorde:");
-      esp.number(54, 38, esp.best());
-    }
-    esp.textCenter(w / 2, h - 10, "ACAO: jogar de novo", 1);
-    esp.show();
+    snprintf(resumo, sizeof(resumo), "Acertos: %d/%d", acertos, totalRodada); drawCentered(resumo, 34, 1, ST7735_WHITE);
+    snprintf(resumo, sizeof(resumo), "Pts: %d", score); drawCentered(resumo, 52, 2, ST7735_YELLOW);
+    if (novoRecorde) drawCentered("NOVO RECORDE!", 76, 1, ST7735_GREEN);
+    else { snprintf(resumo, sizeof(resumo), "Recorde: %ld", (long)stats.best); drawCentered(resumo, 76, 1, ST7735_WHITE); }
+    drawCentered("ACAO: jogar de novo", 106, 1, ST7735_GREEN);
     return;
   }
 
   if (tela == ACERTO) {
-    esp.textCenter(w / 2, 14, "CORRETO!", 2);
-    esp.textCenter(w / 2, 36, "+10 pontos", 1);
-    esp.show();
+    drawCentered("CORRETO!", 44, 2, ST7735_GREEN);
+    drawCentered("+10 pontos", 72, 1, ST7735_YELLOW);
     return;
   }
 
   if (tela == FEEDBACK) {
-    esp.text(0, 0, tempoEsgotado ? "TEMPO ESGOTADO!" : "RESPOSTA CERTA:");
-    textoQuebrado(0, 12, w, 10, atual.opcoes[atual.correta]);
-    if (atual.explicacao[0] != 0) {
-      textoQuebrado(0, 26, w, 10, atual.explicacao);
-    }
-    esp.textCenter(w / 2, h - 10, "ACAO: continuar", 1);
-    esp.show();
+    drawCentered(tempoEsgotado ? "TEMPO ESGOTADO!" : "RESPOSTA CERTA:", 10, 1, ST7735_RED);
+    textoQuebrado(8, 30, W - 16, 11, atual.opcoes[atual.correta], ST7735_GREEN);
+    if (atual.explicacao[0] != 0) textoQuebrado(8, 62, W - 16, 11, atual.explicacao, ST7735_WHITE);
+    drawCentered("ACAO: continuar", 108, 1, COL_GRAY);
     return;
   }
 
-  char topo[24];
+  char topo[20], pts[12];
   if (TEMPO_PERGUNTA > 0) {
-    int seg = (timerFrames + 29) / 30;
-    snprintf(topo, sizeof(topo), "%d/%d %ds", perguntaAtual, totalRodada, seg);
-  } else {
-    snprintf(topo, sizeof(topo), "%d/%d", perguntaAtual, totalRodada);
-  }
-  esp.text(0, 0, topo);
+    int seg = (timerFrames + 29) / 30; ultimoSeg = seg;
+    snprintf(topo, sizeof(topo), "%d/%d  %ds", perguntaAtual, totalRodada, seg);
+  } else snprintf(topo, sizeof(topo), "%d/%d", perguntaAtual, totalRodada);
+  snprintf(pts, sizeof(pts), "Pts:%d", score);
+  tft.setTextSize(1);
+  tft.setTextColor(ST7735_WHITE); tft.setCursor(4, 4); tft.print(topo);
+  tft.setTextColor(ST7735_YELLOW); tft.setCursor(W - (int)strlen(pts) * 6 - 4, 4); tft.print(pts);
+  tft.drawFastHLine(0, 15, W, COL_DKGRAY);
 
-  char pts[12];
-  snprintf(pts, sizeof(pts), "P:%d", score);
-  esp.text(w - (int)strlen(pts) * 6, 0, pts);
-
-  textoQuebrado(0, 10, w, 9, atual.enunciado);
-  esp.line(0, 29, w - 1, 29, true);
+  textoQuebrado(6, 20, W - 12, 10, atual.enunciado, ST7735_WHITE);
 
   for (int i = 0; i < 3; i++) {
-    int oy = 33 + i * 10;
-    char lin[24];
-    snprintf(lin, sizeof(lin), "%d. %.17s", i + 1, atual.opcoes[i]);
+    int oy = 56 + i * 22;
+    char lin[26]; snprintf(lin, sizeof(lin), "%d. %.20s", i + 1, atual.opcoes[i]);
     if (i == selecao) {
-      esp.fillRect(0, oy - 1, w, 9, true);
-      esp.text(4, oy, lin, 1, false);
+      tft.fillRoundRect(6, oy, W - 12, 18, 4, ST7735_BLUE);
+      tft.drawRoundRect(6, oy, W - 12, 18, 4, ST7735_CYAN);
+      tft.setTextSize(1); tft.setTextColor(ST7735_WHITE);
+      tft.setCursor(14, oy + 5); tft.print(lin);
     } else {
-      esp.text(4, oy, lin, 1, true);
+      tft.drawRoundRect(6, oy, W - 12, 18, 4, COL_DKGRAY);
+      tft.setTextSize(1); tft.setTextColor(COL_GRAY);
+      tft.setCursor(14, oy + 5); tft.print(lin);
     }
   }
-  esp.show();
 }
 
 void setup() {
-  esp.begin("${gameId}", "${gameName}", "${tagName}");
+  Serial.begin(115200);
+  pinMode(UP_BUTTON, INPUT_PULLUP); pinMode(DOWN_BUTTON, INPUT_PULLUP);
+  pinMode(LEFT_BUTTON, INPUT_PULLUP); pinMode(RIGHT_BUTTON, INPUT_PULLUP);
+  pinMode(FIRE_BUTTON, INPUT_PULLUP);
+
+  tft.initR(INITR_GREENTAB); tft.setRotation(1); tft.setTextWrap(false); tft.fillScreen(COL_BG);
+  loadStats();
+  Preferences idp; idp.begin("esplay", false); studentId = idp.getUShort("sid", 0); idp.end();
+  bool forceId = (digitalRead(LEFT_BUTTON) == LOW) && (digitalRead(RIGHT_BUTTON) == LOW);
+  if (PEDIR_ALUNO && (studentId == 0 || forceId)) promptStudentId();
+  randomSeed(esp_random());
+  needsRedraw = true; tickTimer = millis();
 }
 
 void loop() {
-  if (esp.tick(30)) {
-    atualizar();
-    desenhar();
+  handleSerial();
+  unsigned long now = millis();
+  if (now - tickTimer < 33) return;
+  tickTimer = now;
+
+  static bool prevU = false, prevD = false, prevF = false;
+  bool uNow = (digitalRead(UP_BUTTON) == LOW), dNow = (digitalRead(DOWN_BUTTON) == LOW), fNow = (digitalRead(FIRE_BUTTON) == LOW);
+  bool uPr = uNow && !prevU, dPr = dNow && !prevD, fPr = fNow && !prevF;
+  prevU = uNow; prevD = dNow; prevF = fNow;
+
+  if (tela == TITULO || tela == FIM) {
+    if (fPr) novoJogo();
+  } else if (tela == ACERTO) {
+    esperaFrames--;
+    if (esperaFrames <= 0 || fPr) avancarOuFim();
+  } else if (tela == FEEDBACK) {
+    if (fPr) avancarOuFim();
+  } else if (tela == JOGANDO) {
+    if (TEMPO_PERGUNTA > 0) {
+      timerFrames--;
+      int seg = (timerFrames + 29) / 30;
+      if (seg != ultimoSeg) needsRedraw = true;
+      if (timerFrames <= 0) {
+        recordMiss(atual.cat); tempoEsgotado = true; tela = FEEDBACK; needsRedraw = true;
+      }
+    }
+    if (tela == JOGANDO) {
+      if (uPr) { selecao = (selecao + 2) % 3; needsRedraw = true; }
+      if (dPr) { selecao = (selecao + 1) % 3; needsRedraw = true; }
+      if (fPr) {
+        if (selecao == atual.correta) {
+          score += 10; acertos++; recordHit(atual.cat); esperaFrames = 18; tela = ACERTO;
+        } else {
+          recordMiss(atual.cat); tempoEsgotado = false; tela = FEEDBACK;
+        }
+        needsRedraw = true;
+      }
+    }
   }
+
+  if (needsRedraw) { desenhar(); needsRedraw = false; }
 }
 `;
 }
@@ -586,7 +688,7 @@ export function initCreator({ makeConsole, addRunner, onSend, onRegisterMeta }) 
                     <input type="radio" name="qcor-${qi}" value="${oi}" ${Number(q.correta) === oi ? 'checked' : ''} data-qcor="${oi}">
                     <span>Certa</span>
                   </label>
-                  <input type="text" maxlength="18" value="${esc(q.opcoes[oi] || '')}" data-qopt="${oi}" placeholder="Alternativa ${oi + 1} (até 18 letras)" aria-label="Alternativa ${oi + 1} da pergunta ${qi + 1}">
+                  <input type="text" maxlength="20" value="${esc(q.opcoes[oi] || '')}" data-qopt="${oi}" placeholder="Alternativa ${oi + 1} (até 20 letras)" aria-label="Alternativa ${oi + 1} da pergunta ${qi + 1}">
                 </div>`
               )
               .join('')}

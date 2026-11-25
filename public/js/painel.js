@@ -611,10 +611,11 @@ export function initPainel({ games }) {
     setStatus('Todos os dados foram apagados deste navegador.');
   });
 
-  // leitura pela porta serial (Chrome e Edge no computador)
+  // leitura pela porta serial (Chrome e Edge no computador; aceita 1 jogo ou vários no modo menu)
   $('#btn-serial').addEventListener('click', async () => {
     if (!('serial' in navigator)) { setStatus('Este navegador não tem acesso à porta USB. Use o Chrome ou o Edge no computador, ou use Colar dados.'); return; }
-    let port, reader, writer, closed, got = '', timer;
+    let port, reader, writer, closed, timer, settleTimer;
+    const counts = { novo: 0, igual: 0 };
     try {
       port = await navigator.serial.requestPort();
       await port.open({ baudRate: 115200 });
@@ -631,7 +632,7 @@ export function initPainel({ games }) {
       const enc = new TextEncoder();
       const send = () => writer.write(enc.encode('ESPLAY?\n')).catch(() => {});
       setTimeout(send, 1500);
-      setTimeout(() => { if (!got) send(); }, 3500);
+      setTimeout(() => { if (!counts.novo && !counts.igual) send(); }, 3500);
       timer = setTimeout(() => reader.cancel().catch(() => {}), 9000);
       let buf = '';
       while (true) {
@@ -642,23 +643,38 @@ export function initPainel({ games }) {
         while ((k = buf.indexOf('\n')) >= 0) {
           const line = buf.slice(0, k).trim();
           buf = buf.slice(k + 1);
+          if (line === 'ESPLAY_END' && (counts.novo || counts.igual)) {
+            clearTimeout(timer);
+            clearTimeout(settleTimer);
+            await reader.cancel();
+            break;
+          }
           if (line.charAt(0) === '{') {
             try {
               const out = addReading(JSON.parse(line));
-              if (out) { got = out; clearTimeout(timer); await reader.cancel(); }
+              if (out) {
+                counts[out]++;
+                clearTimeout(timer);
+                clearTimeout(settleTimer);
+                settleTimer = setTimeout(() => reader.cancel().catch(() => {}), 450);
+              }
             } catch (e) { /* linha que não é JSON */ }
           }
         }
       }
     } catch (e) { /* porta fechada */ } finally {
+      clearTimeout(timer);
+      clearTimeout(settleTimer);
       try { if (writer) writer.releaseLock(); } catch (e) { /* ignora */ }
       try { if (closed) await closed; } catch (e) { /* ignora */ }
       try { await port.close(); } catch (e) { /* ignora */ }
     }
     setStatus(
-      got === 'novo' ? 'Leitura salva. Troque de console e leia o próximo aluno.'
-        : got === 'igual' ? 'Esse console não tem partidas novas desde a última leitura.'
-        : 'O console não respondeu. Confira se há um jogo gravado com a biblioteca ESPlay e tente de novo.'
+      counts.novo > 0
+        ? `${counts.novo} ${counts.novo === 1 ? 'leitura salva' : 'leituras salvas'}. Troque de console e leia o próximo aluno.`
+        : counts.igual > 0
+          ? 'Esse console não tem partidas novas desde a última leitura.'
+          : 'O console não respondeu. Confira se há um jogo do ESPlay gravado e tente de novo.'
     );
   });
 

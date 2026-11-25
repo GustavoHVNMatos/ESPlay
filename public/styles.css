@@ -93,7 +93,7 @@ section { padding-block: 72px 0; }
 /* console emulado */
 .console { background: var(--shell); border: 2px solid var(--ink); border-radius: 22px; padding: 16px 16px 18px; box-shadow: 6px 6px 0 var(--ink); width: 100%; max-width: 440px; }
 .bezel { background: #0A0E14; border-radius: 8px; padding: 10px; }
-.screen { display: block; width: 100%; aspect-ratio: 2 / 1; image-rendering: pixelated; background: var(--oled); }
+.screen { display: block; width: 100%; aspect-ratio: 160 / 128; image-rendering: pixelated; background: #000; }
 .controls { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 14px; padding-inline: 8px; }
 .dpad { display: grid; grid-template-columns: repeat(3, 40px); grid-template-rows: repeat(3, 40px); }
 .pad { position: relative; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 2px solid #0E1B2A; background: #E8EEFF; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
@@ -327,3 +327,9 @@ table.grid .spark { width: 80px; }
 .case-info { display: grid; gap: 12px; }
 .case-info .downloads { margin-top: 4px; }
 @media (max-width: 900px) { .case-card { grid-template-columns: minmax(0, 1fr); } }
+
+/* ===== modo menu (multi-jogos) ===== */
+.viability-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.menu-grid { margin-top: 20px; display: grid; grid-template-columns: minmax(0, 440px) minmax(0, 1fr); gap: 24px; align-items: start; }
+.menu-grid > * { min-width: 0; }
+@media (max-width: 900px) { .viability-grid, .menu-grid { grid-template-columns: minmax(0, 1fr); } }

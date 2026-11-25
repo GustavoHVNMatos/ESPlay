@@ -1,4 +1,4 @@
-// Biblioteca de jogos: monta cards, filtros, prévias jogáveis e ficha a partir de games/games.json.
+// Biblioteca de jogos: monta cards, filtros, prévias jogáveis coloridas (160x128) e ficha a partir de games/games.json.
 
 import { $, $$, esc, flash, selectNode, copyText, download } from './util.js';
 import { GAMES_BY_PREVIEW } from './preview.js';
@@ -6,14 +6,13 @@ import { GAMES_BY_PREVIEW } from './preview.js';
 const isAvail = (g) => g.status === 'disponivel';
 
 const KEY_CAPTIONS = {
-  pixelmath: 'No teclado: setas esquerda e direita, e Espaço para o botão de ação. A prévia ainda usa a tela de 128×64 do primeiro protótipo.',
-  acentoquest: 'No teclado: setas cima e baixo para alternar entre as opções e Espaço para confirmar. A prévia ainda usa a tela de 128×64 do primeiro protótipo.',
-  ciclofis: 'No teclado: setas cima e baixo para alternar entre as opções e Espaço para confirmar. A prévia ainda usa a tela de 128×64 do primeiro protótipo.',
-  regiomap: 'No teclado: setas cima e baixo para alternar entre as capitais e Espaço para confirmar. A prévia ainda usa a tela de 128×64 do primeiro protótipo.',
-  algoritmando: 'No teclado: aperte as 4 setas (cima, baixo, esquerda, direita) para completar a sequência e Espaço para iniciar. A prévia ainda usa a tela de 128×64 do primeiro protótipo.',
+  pixelmath: 'No teclado: setas esquerda e direita, e Espaço para o botão de ação. Tela ST7735S colorida 160×128 (paisagem).',
+  acentoquest: 'No teclado: setas cima e baixo para alternar entre as opções e Espaço para confirmar. Tela ST7735S colorida 160×128 (paisagem).',
+  ciclofis: 'No teclado: setas cima e baixo para alternar entre as opções e Espaço para confirmar. Tela ST7735S colorida 160×128 (paisagem).',
+  regiomap: 'No teclado: setas cima e baixo para alternar entre as capitais e Espaço para confirmar. Tela ST7735S colorida 160×128 (paisagem).',
+  algoritmando: 'No teclado: aperte as 4 setas (cima, baixo, esquerda, direita) para completar a sequência e Espaço para iniciar. Tela ST7735S colorida 160×128 (paisagem).',
 };
 
-// Definição dos ajustes por jogo: cada entrada controla a UI, a prévia e a substituição no código .ino.
 const SETTINGS_UI = {
   pixelmath: {
     render: () => `
@@ -25,8 +24,8 @@ const SETTINGS_UI = {
       </label>
       <label class="field" for="opt-vel">Velocidade inicial
         <select id="opt-vel">
-          <option value="0.5">Lenta</option>
-          <option value="0.8">Média</option>
+          <option value="0.6">Lenta</option>
+          <option value="0.8" selected>Média</option>
           <option value="1.2">Rápida</option>
         </select>
       </label>`,
@@ -185,7 +184,6 @@ export function initLibrary({ games, makeConsole, addRunner, onSend }) {
   const chipsBox = $('#chips');
   const materias = [...new Set(games.map((g) => g.materia))];
 
-  /* ---------- filtros e cards ---------- */
   chipsBox.innerHTML = ['todas', ...materias]
     .map((m, i) => `<button class="chip" type="button" data-f="${esc(m)}" aria-pressed="${i === 0}">${m === 'todas' ? 'Todas' : esc(m)}</button>`)
     .join('');
@@ -209,8 +207,7 @@ export function initLibrary({ games, makeConsole, addRunner, onSend }) {
     });
   });
 
-  /* ---------- prévia jogável e cache por jogo ---------- */
-  const libCon = makeConsole($('#lib-console'), 'Tela do console para testar o jogo escolhido');
+  const libCon = makeConsole($('#lib-console'), 'Tela colorida 160x128 do console para testar o jogo escolhido');
   const instances = new Map();
   const codeCache = new Map();
   let currentGameMeta = null;
@@ -255,7 +252,6 @@ export function initLibrary({ games, makeConsole, addRunner, onSend }) {
 
   const applySettings = (e) => {
     if (!currentGameMeta || !currentGame) return;
-    // Evita desmarcar todas as opções no CicloFis.
     if (currentGameMeta.id === 'ciclofis' && e && e.target && e.target.hasAttribute('data-cf')) {
       const checked = $$('[data-cf]').filter((c) => c.checked);
       if (!checked.length) {
@@ -299,7 +295,6 @@ export function initLibrary({ games, makeConsole, addRunner, onSend }) {
       : `Enviado (${currentGameMeta.nome}). Veja o aluno 7 no painel do professor.`;
   });
 
-  /* ---------- detalhe do jogo escolhido ---------- */
   const list = (items) => '<ul>' + items.map((t) => `<li>${t}</li>`).join('') + '</ul>';
 
   function renderDetail(g) {
@@ -309,7 +304,7 @@ export function initLibrary({ games, makeConsole, addRunner, onSend }) {
        <h3 class="detail-title">${esc(g.nome)}</h3>
        <p>${esc(g.resumo)}</p>` +
       (soon
-        ? '<div class="banner"><span><b>Em desenvolvimento.</b> A ficha do jogo já está definida. O código e a prévia entram depois dos testes no console.</span></div>'
+        ? '<div class="banner"><span><b>Em desenvolvimento.</b> A ficha do jogo já está definida.</span></div>'
         : '');
 
     const rows = [

@@ -1,5 +1,5 @@
 {
-  "_ajuda": "Cada jogo da biblioteca é um item desta lista. O id deve ser igual ao gameId usado no esp.begin() do sketch. status: disponivel ou em-breve. preview: nome da prévia jogável.",
+  "_ajuda": "Cada jogo da biblioteca é um item desta lista. O id deve ser igual ao GAME_ID usado no sketch .ino. status: disponivel ou em-breve. preview: nome da prévia jogável.",
   "games": [
     {
       "id": "pixelmath",
@@ -45,7 +45,7 @@
       ],
       "categorias": ["1 oxítonas", "2 paroxítonas", "3 proparoxítonas"],
       "tagRotulos": { "1": "Oxítonas", "2": "Paroxítonas", "3": "Proparoxítonas" },
-      "aoErrar": "Mostra a palavra com a sílaba tônica em destaque e a regra, em várias linhas (ex.: TODAS PROPAROXITONAS SAO ACENTUADAS).",
+      "aoErrar": "Mostra a palavra com a sílaba tônica destacada em amarelo e a regra, em várias linhas (ex.: TODAS PROPAROXITONAS SAO ACENTUADAS).",
       "professorAjusta": "Fixar uma categoria para treino focado, ou sortear as três, e definir quantas perguntas entram na rodada.",
       "fimPartida": "10 perguntas por rodada (ajustável pelo professor para 5, 10 ou 15).",
       "observacao": "As palavras aparecem sem acento por causa da fonte do console. O banco evita palavras que ficam ambíguas sem acento (como SABIA) e guarda a sílaba tônica de cada palavra."

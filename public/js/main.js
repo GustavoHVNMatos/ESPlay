@@ -1,16 +1,17 @@
-// Ponto de entrada: liga a prévia da página inicial, a biblioteca, o criador de jogos e o painel do professor.
+// Ponto de entrada: liga a prévia da página inicial, visualizador 3D, biblioteca, modo menu, criador de jogos e painel.
 
 import { $, loadGames } from './util.js';
 import { makeConsole, PixelMath, addRunner, startLoop, fontsReady, reduced } from './preview.js';
 import { initLibrary } from './library.js';
+import { initMenu } from './menu.js';
 import { initCreator } from './creator.js';
 import { initPainel } from './painel.js';
 import { initStlViewer } from './stlviewer.js';
 
 // Console da página inicial: joga sozinho e erra de vez em quando.
 function initHero() {
-  const con = makeConsole($('#hero-console'), 'Tela do console jogando PixelMath');
-  const game = new PixelMath(con.scr, { v0: 0.9, vmax: 1.6 });
+  const con = makeConsole($('#hero-console'), 'Tela colorida 160x128 do console jogando PixelMath');
+  const game = new PixelMath(con.scr, { v0: 1.0, vmax: 2.2 });
   let wait = 0, lastQ = -1, target = 1, tick = 0;
   const bot = () => {
     if (reduced) return;
@@ -30,23 +31,20 @@ function initHero() {
   addRunner(con, game, bot);
 }
 
-// Roteamento de teclado entre a prévia da Biblioteca e a prévia do Criador de jogos.
-function bindKeyboard(lib, creator) {
+// Roteamento de teclado entre Biblioteca, Modo Menu e Criador de jogos.
+function bindKeyboard(targets) {
   let active = 'lib';
-  const libSec = $('#biblioteca');
-  const crSec = $('#criador');
 
-  if (libSec) libSec.addEventListener('pointerdown', () => { active = 'lib'; });
-  if (crSec) crSec.addEventListener('pointerdown', () => { active = 'creator'; });
+  targets.forEach((t) => {
+    const sec = $(t.selector);
+    if (sec) sec.addEventListener('pointerdown', () => { active = t.id; });
+  });
 
   const pickConsole = () => {
-    const libVisible = lib.runner.visible && !$('#detail-play').hidden;
-    const crVisible = creator.runner.visible;
-    if (active === 'creator' && crVisible) return creator.console;
-    if (active === 'lib' && libVisible) return lib.console;
-    if (crVisible) return creator.console;
-    if (libVisible) return lib.console;
-    return null;
+    const pref = targets.find((t) => t.id === active && t.isReady());
+    if (pref) return pref.ref.console;
+    const any = targets.find((t) => t.isReady());
+    return any ? any.ref.console : null;
   };
 
   const keyMap = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down' };
@@ -67,8 +65,7 @@ function bindKeyboard(lib, creator) {
   document.addEventListener('keyup', (e) => {
     const m = keyMap[e.key] || (e.key === ' ' || e.key === 'Spacebar' ? 'action' : null);
     if (!m) return;
-    lib.console.ctl.up(m);
-    creator.console.ctl.up(m);
+    targets.forEach((t) => { if (t.ref && t.ref.console) t.ref.console.ctl.up(m); });
   });
 }
 
@@ -77,11 +74,12 @@ async function main() {
   const games = data.games || [];
 
   initHero();
-  initStlViewer($('#stl-viewer'), 'downloads/CaseESPboyV4.stl');
+  initStlViewer($('#stl-viewer'), 'downloads/CaseESPboyV5.stl');
   const painel = initPainel({ games });
   const send = (r) => painel.addReading(r, { focusGame: true });
 
   const lib = initLibrary({ games, makeConsole, addRunner, onSend: send });
+  const menu = initMenu({ makeConsole, addRunner, onSend: send });
   const creator = initCreator({
     makeConsole,
     addRunner,
@@ -89,7 +87,11 @@ async function main() {
     onRegisterMeta: (meta) => painel.registerGameMeta(meta),
   });
 
-  bindKeyboard(lib, creator);
+  bindKeyboard([
+    { id: 'lib', selector: '#biblioteca', ref: lib, isReady: () => lib && lib.runner.visible && !$('#detail-play').hidden },
+    { id: 'menu', selector: '#menu-jogos', ref: menu, isReady: () => menu && menu.runner.visible },
+    { id: 'creator', selector: '#criador', ref: creator, isReady: () => creator && creator.runner.visible },
+  ]);
   startLoop();
 }
 

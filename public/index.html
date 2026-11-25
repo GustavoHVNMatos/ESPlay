@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ESPlay — Console maker educacional com ESP32</title>
-<meta name="description" content="Console portátil feito com ESP32 para a escola: imprima a carcaça em 3D, monte, jogue para aprender e acompanhe a turma pelo painel do professor.">
+<meta name="description" content="Console portátil feito com ESP32 e tela colorida ST7735S para a escola: imprima a carcaça oficial em 3D, monte, jogue para aprender e acompanhe a turma pelo painel do professor.">
 <meta name="theme-color" content="#1F5EFF">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="pt_BR">
 <meta property="og:title" content="ESPlay — Console maker educacional">
-<meta property="og:description" content="5 jogos educativos prontos, criador de quizzes personalizado e painel do professor com leitura via USB.">
+<meta property="og:description" content="5 jogos educativos prontos, criador de quizzes personalizado, modo menu opcional e painel do professor via USB.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231F5EFF'/%3E%3Crect x='5' y='6' width='22' height='12' rx='2' fill='%2305070B'/%3E%3Crect x='7' y='21' width='7' height='3' fill='%23fff'/%3E%3Crect x='9' y='19' width='3' height='7' fill='%23fff'/%3E%3Ccircle cx='23' cy='23' r='3' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,10 +25,10 @@
       <a href="#sobre">O projeto</a>
       <a href="#construa">Construir</a>
       <a href="#biblioteca">Jogos</a>
+      <a href="#menu-jogos">Modo Menu</a>
       <a href="#criador">Criar jogo</a>
       <a href="#professor">Professor</a>
-      <a href="#guia">Guia e FAQ</a>
-      <a href="#novidades">Em breve</a>
+      <a href="#guia">Guia</a>
     </nav>
   </div>
 </header>
@@ -39,7 +39,7 @@
     <div class="hero-copy">
       <p class="eyebrow">Console maker educacional</p>
       <h1>Construa o console. Jogue para aprender.</h1>
-      <p class="lead">O ESPlay é um console portátil feito com ESP32 que a turma imprime, monta e programa. Cada jogo ensina uma matéria, e o professor lê os recordes para ver quem precisa de ajuda.</p>
+      <p class="lead">O ESPlay é um console portátil feito com ESP32 e tela colorida que a turma imprime, monta e programa. Cada jogo ensina uma matéria, e o professor lê os recordes para ver quem precisa de ajuda.</p>
       <div class="cta">
         <a class="btn primary" href="#biblioteca">Ver os 5 jogos</a>
         <a class="btn" href="#criador">Criar um quiz</a>
@@ -48,7 +48,7 @@
     </div>
     <div class="hero-device">
       <div id="hero-console"></div>
-      <p class="caption">Simulação do PixelMath na tela de 128×64 do primeiro protótipo. Você pode jogar com os botões.</p>
+      <p class="caption">Simulação colorida do PixelMath na tela ST7735S de 160×128 (modo paisagem). Você pode jogar com os botões.</p>
     </div>
   </div>
 
@@ -61,24 +61,24 @@
     <div class="about">
       <div class="text">
         <h3>Objetivo</h3>
-        <p>Reunir jogos educativos de várias matérias em código aberto, para alunos e professores gravarem no console sem precisar programar do zero.</p>
+        <p>Reunir jogos educativos autorais em código aberto, para alunos e professores gravarem direto pela Arduino IDE sem precisar programar do zero.</p>
         <h3>Como o professor acompanha</h3>
-        <p>Cada jogo guarda no console o melhor placar, o número de partidas e os acertos e erros por assunto. Ao ligar o console no computador, o painel mostra o nível da turma e onde ela mais erra.</p>
-        <h3>Um jogo por vez</h3>
-        <p>Cada gravação coloca um jogo no console. Os recordes e o número do aluno continuam guardados quando você troca de jogo.</p>
+        <p>Cada jogo guarda na memória flash do ESP32 o melhor placar, o número de partidas e os acertos e erros por assunto. Ao ligar o console no computador, o painel mostra o nível da turma e onde ela mais erra.</p>
+        <h3>Unitário ou com Menu</h3>
+        <p>Por padrão, o professor grava um jogo por vez para manter a turma focada na atividade avaliada. Se preferir, também é possível gerar um sketch opcional com menu para reunir vários jogos autorais no mesmo console.</p>
       </div>
       <ol class="flow">
-        <li><div><b>Baixar os arquivos</b><span>Peças, esquema de ligação e modelos para impressão 3D.</span></div></li>
-        <li><div><b>Imprimir e montar</b><span>Os alunos montam o console com ajuda do professor e testam os botões.</span></div></li>
-        <li><div><b>Escolher ou criar um jogo</b><span>Na biblioteca de 5 jogos ou montando um quiz personalizado.</span></div></li>
-        <li><div><b>Gravar no ESP32</b><span>Copiar o código para a Arduino IDE e enviar ao console.</span></div></li>
-        <li><div><b>Jogar e acompanhar</b><span>O console volta ao computador e o painel mostra o aprendizado.</span></div></li>
+        <li><div><b>Baixar os arquivos</b><span>STL oficial da carcaça, pinagem validada e sketch de teste dos botões.</span></div></li>
+        <li><div><b>Imprimir e montar</b><span>Os alunos imprimem a case, ligam os fios e conferem cada botão na tela.</span></div></li>
+        <li><div><b>Escolher ou criar um jogo</b><span>Na biblioteca de 5 jogos autorais, no modo menu ou no criador de quizzes.</span></div></li>
+        <li><div><b>Gravar no ESP32</b><span>Copiar ou baixar o código <span class="mono">.ino</span> pronto e enviar pela Arduino IDE.</span></div></li>
+        <li><div><b>Jogar e acompanhar</b><span>O console volta ao computador e o painel lê as estatísticas pela USB.</span></div></li>
       </ol>
     </div>
 
     <div class="sketch-box">
       <div class="stl-box" id="stl-viewer">
-        <canvas class="stl-canvas" role="img" aria-label="Visualizador 3D interativo da carcaça final do ESPlay"></canvas>
+        <canvas class="stl-canvas" role="img" aria-label="Visualizador 3D interativo da carcaça oficial do ESPlay"></canvas>
         <div class="stl-bar">
           <span class="muted small" data-stl-status>Carregando modelo 3D…</span>
           <div class="stl-acts">
@@ -90,82 +90,80 @@
         </div>
       </div>
       <div>
-        <h3>A carcaça em 3D</h3>
-        <p class="muted" style="margin-block: 6px 12px;">Versão final modelada no OpenSCAD em duas partes com fechamento por encaixe (<span class="mono">CaseESPboyV4.stl</span> · 190 × 135 × 29 mm).</p>
+        <h3>A carcaça oficial em 3D</h3>
+        <p class="muted" style="margin-block: 6px 12px;">Versão oficial definitiva modelada no OpenSCAD em duas partes com encaixe (<span class="mono">CaseESPboyV5.stl</span> · 190 × 135 × 28 mm).</p>
         <ol class="legend">
-          <li>Tampa frontal com recorte da tela e furos dos botões</li>
-          <li>Cruzeta: cima, baixo, esquerda e direita</li>
-          <li>Botão de ação e compartimento interno para o ESP32</li>
+          <li>Tampa frontal com recorte do TFT ST7735S (160×128 paisagem)</li>
+          <li>Cruzeta direcional: cima, baixo, esquerda e direita</li>
+          <li>Botão de ação e compartimento interno para o ESP32 DevKit V1</li>
         </ol>
         <div class="cta" style="margin-top: 16px;">
-          <a class="btn small primary" href="#construa-arquivos">Baixar o STL para imprimir</a>
+          <a class="btn small primary" href="#construa-arquivos">Baixar o STL oficial</a>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- TODO (hardware): confirmar lista real de peças, pinos do display ST7735, quinto botão, bibliotecas e liberar esquema -->
   <section id="construa">
     <div class="sec-head">
       <p class="eyebrow">Construir o meu</p>
-      <h2>Peças, ligações e montagem</h2>
-      <p>Tudo o que a turma precisa para sair da caixa de peças até o primeiro jogo.</p>
+      <h2>Peças, ligações testadas e montagem</h2>
+      <p>Pinagem e bibliotecas já validadas no console real com ESP32 DevKit V1 e display TFT colorido ST7735S.</p>
     </div>
     <div class="build">
       <div class="panel">
         <h3>Peças</h3>
         <ul>
-          <li>1 placa ESP32 (DevKit com ESP32-WROOM)</li>
-          <li>1 display LCD colorido ST7735, 128×160 (SPI)</li>
+          <li>1 placa <b>ESP32 DevKit V1</b> (30 pinos)</li>
+          <li>1 display <b>TFT 1.8" 128×160 ST7735S</b> (SPI, modo paisagem 160×128)</li>
           <li>5 botões táteis</li>
-          <li>Fios, ou solda em placa perfurada</li>
+          <li>Fios jumper ou solda em placa perfurada</li>
           <li>Cabo USB que transmite dados</li>
-          <li>Carcaça impressa em 3D</li>
+          <li>Carcaça impressa em 3D (<span class="mono">CaseESPboyV5.stl</span>)</li>
         </ul>
-        <p class="muted">Alimentação por bateria ainda a definir.</p>
       </div>
       <div class="panel">
         <h3>Ligações</h3>
         <div class="tablewrap">
           <table>
-            <thead><tr><th>Peça</th><th>Pino do ESP32</th></tr></thead>
+            <thead><tr><th>Componente / Sinal</th><th>Pino no ESP32</th></tr></thead>
             <tbody>
-              <tr><td>Display (SPI)</td><td class="mono">a confirmar</td></tr>
-              <tr><td>Botão cima</td><td class="mono">GPIO 32</td></tr>
-              <tr><td>Botão baixo</td><td class="mono">GPIO 33</td></tr>
-              <tr><td>Botão esquerda</td><td class="mono">GPIO 25</td></tr>
-              <tr><td>Botão direita</td><td class="mono">GPIO 26</td></tr>
-              <tr><td>Botão ação</td><td class="mono">GPIO 27</td></tr>
+              <tr><td>TFT VCC / BLK</td><td class="mono">3V3</td></tr>
+              <tr><td>TFT GND</td><td class="mono">GND</td></tr>
+              <tr><td>TFT SCL (SCK) / SDA (MOSI)</td><td class="mono">GPIO 18 / 23</td></tr>
+              <tr><td>TFT RST / DC / CS</td><td class="mono">GPIO 4 / 2 / 5</td></tr>
+              <tr><td>Botão CIMA</td><td class="mono">GPIO 32</td></tr>
+              <tr><td>Botão BAIXO</td><td class="mono">GPIO 33</td></tr>
+              <tr><td>Botão ESQUERDA</td><td class="mono">GPIO 26</td></tr>
+              <tr><td>Botão DIREITA</td><td class="mono">GPIO 27</td></tr>
+              <tr><td>Botão AÇÃO / CONFIRMAR</td><td class="mono">GPIO 25</td></tr>
             </tbody>
           </table>
         </div>
-        <p class="muted">Pinos dos botões: padrão da biblioteca, a confirmar com a carcaça. Cada botão liga o pino ao GND, e o código usa o resistor interno do ESP32. Os pinos do display serão confirmados.</p>
+        <p class="muted">Cada botão liga o pino ao GND com resistor interno (<span class="mono">INPUT_PULLUP</span>). O display usa <span class="mono">INITR_GREENTAB</span> e <span class="mono">setRotation(1)</span>.</p>
       </div>
       <div class="panel">
         <h3>Montagem e primeiro teste</h3>
         <ol>
-          <li>Imprima a carcaça (<span class="mono">CaseESPboyV4.stl</span>) e ligue as peças conforme a tabela.</li>
+          <li>Imprima a carcaça (<span class="mono">CaseESPboyV5.stl</span>) e faça as ligações da tabela.</li>
           <li>Na Arduino IDE, instale o suporte à placa <b>esp32 by Espressif Systems</b>.</li>
-          <li>Instale as bibliotecas do display (a lista será confirmada com o sketch do LCD).</li>
-          <li>Instale a biblioteca <b>ESPlay</b> pelo arquivo .zip (Sketch, Incluir Biblioteca, Adicionar .ZIP).</li>
-          <li>Grave o exemplo <b>TesteBotoes</b> e aperte cada botão. Cada um deve acender na tela.</li>
+          <li>No Gerenciador de Bibliotecas, instale <b>Adafruit GFX Library</b> e <b>Adafruit ST7735 and ST7789 Library</b> (<span class="mono">Preferences</span> já vem no core ESP32).</li>
+          <li>Baixe e grave o sketch <b>TesteBotoes.ino</b> e aperte os 5 botões para confirmar tudo na tela colorida.</li>
         </ol>
       </div>
     </div>
 
     <div class="panel case-card" id="construa-arquivos">
       <figure class="case-fig">
-        <img src="img/case-esplay.png" alt="Render 3D da carcaça final do ESPlay em duas partes: tampa com recorte da tela e furos dos 5 botões, e base interna para a placa." loading="lazy">
-        <figcaption class="caption">Modelo final em duas partes (<span class="mono">190 × 135 × 29 mm</span>).</figcaption>
+        <img src="img/case-esplay.png" alt="Render 3D da carcaça oficial do ESPlay em duas partes: tampa com recorte da tela e furos dos 5 botões, e base interna para a placa." loading="lazy">
+        <figcaption class="caption">Case oficial em duas partes (<span class="mono">190 × 135 × 28 mm</span>).</figcaption>
       </figure>
       <div class="case-info">
-        <h3>Arquivos da carcaça e biblioteca</h3>
-        <p class="muted">A versão final da case (<span class="mono">CaseESPboyV4.stl</span>) já está pronta para fatiar e imprimir em 3D. Basta baixar o arquivo abaixo junto com a biblioteca <span class="mono">ESPlay.zip</span> para a Arduino IDE.</p>
+        <h3>Arquivos oficiais para imprimir e testar</h3>
+        <p class="muted">Os sketches dos jogos já vêm completos e autônomos usando apenas as bibliotecas da Adafruit: não precisa instalar nenhum arquivo <span class="mono">.zip</span> de plataforma extra.</p>
         <div class="downloads">
-          <a class="btn primary" href="downloads/CaseESPboyV4.stl" download="CaseESPboyV4.stl">Baixar carcaça 3D (.stl)</a>
-          <a class="btn" href="downloads/ESPlay.zip" download>Baixar a biblioteca ESPlay (.zip)</a>
-          <button class="btn" type="button" disabled>Esquema de ligação</button>
-          <span class="tag soon">Em breve</span>
+          <a class="btn primary" href="downloads/CaseESPboyV5.stl" download="CaseESPboyV5.stl">Baixar carcaça oficial (.stl)</a>
+          <a class="btn" href="games/testebotoes.ino" download="TesteBotoes.ino">Baixar Teste de Botões (.ino)</a>
         </div>
       </div>
     </div>
@@ -173,9 +171,9 @@
 
   <section id="biblioteca">
     <div class="sec-head">
-      <p class="eyebrow">Biblioteca de jogos</p>
-      <h2>Escolha o jogo e veja como ele funciona</h2>
-      <p>Filtre por matéria, abra a ficha de cada jogo, jogue a prévia no navegador e copie ou baixe o código pronto para a Arduino IDE.</p>
+      <p class="eyebrow">Biblioteca de jogos autorais</p>
+      <h2>Escolha o jogo e grave no console</h2>
+      <p>Filtre por matéria, teste a prévia colorida 160×128 no navegador, ajuste as configurações pedagógicas e baixe o código <span class="mono">.ino</span> pronto para o ESP32.</p>
     </div>
 
     <div class="chips" role="group" aria-label="Filtrar por matéria" id="chips"></div>
@@ -188,18 +186,18 @@
         <div class="detail-top">
           <div class="hero-device">
             <div id="lib-console"></div>
-            <p class="caption" id="lib-caption">No teclado: setas e Espaço para o botão de ação. A prévia ainda usa a tela de 128×64 do primeiro protótipo.</p>
+            <p class="caption" id="lib-caption">Tela ST7735S colorida 160×128 (paisagem).</p>
           </div>
           <div class="detail-side">
             <div>
               <h3 class="side-title">O professor ajusta</h3>
               <div class="fields" id="lib-fields"></div>
-              <p class="note">As escolhas acima atualizam a prévia e mudam o código do jogo abaixo.</p>
+              <p class="note">As escolhas acima atualizam a prévia e mudam as constantes no código abaixo.</p>
             </div>
             <div>
               <h3 class="side-title">O que o console guarda (aluno 7)</h3>
               <pre class="livejson" id="livejson" aria-live="off"></pre>
-              <p class="note">Os dados são gravados no fim de cada partida. É isso que o painel do professor lê pela USB.</p>
+              <p class="note">Os dados são gravados no fim de cada partida na NVS (<span class="mono">Preferences</span>) e lidos pela USB no painel do professor.</p>
               <div class="send-row"><button class="btn small" type="button" id="send-panel">Mandar para o painel (demonstração)</button> <span class="status" id="send-status" role="status"></span></div>
             </div>
           </div>
@@ -219,10 +217,10 @@
         <div class="panel">
           <h3>Como gravar no console</h3>
           <ol class="steps">
-            <li>Instale a biblioteca ESPlay e as bibliotecas do display (veja a seção Construir).</li>
-            <li>Na Arduino IDE, abra o arquivo baixado ou cole o código copiado em um sketch novo.</li>
-            <li>Em Ferramentas, escolha a placa <b>ESP32 Dev Module</b> e a porta do console.</li>
-            <li>Clique em Carregar. Na primeira vez, o console pede o número do aluno.</li>
+            <li>Na Arduino IDE, tenha instaladas as bibliotecas <b>Adafruit GFX Library</b> e <b>Adafruit ST7735 and ST7789 Library</b>.</li>
+            <li>Abra o arquivo <span class="mono">.ino</span> baixado ou cole o código copiado em um sketch novo.</li>
+            <li>Em Ferramentas, escolha a placa <b>DOIT ESP32 DEVKIT V1</b> (ou <b>ESP32 Dev Module</b>) e a porta USB do console.</li>
+            <li>Clique em Carregar. Na primeira vez, o console pede o número do aluno (1 a 999).</li>
             <li>Para manter os recordes ao trocar de jogo, deixe desligada a opção <b>Erase All Flash Before Sketch Upload</b>.</li>
           </ol>
         </div>
@@ -232,11 +230,74 @@
     </div>
   </section>
 
+  <section id="menu-jogos">
+    <div class="sec-head">
+      <p class="eyebrow">Modo Menu · Opcional</p>
+      <h2>Vários jogos autorais em um só ESP32</h2>
+      <p>Esta é uma opção à parte para quando você quiser colocar de 2 a 5 jogos autorais juntos no mesmo aparelho com um menu de seleção. Para voltar ao menu durante qualquer jogo, basta segurar <b>Ação</b> por 2 segundos.</p>
+    </div>
+
+    <div class="viability-grid">
+      <div class="panel">
+        <span class="tag ok">Recomendado para avaliação</span>
+        <h3>Modo Unitário (1 jogo por vez)</h3>
+        <p class="muted">O aluno liga o aparelho direto no jogo da aula, sem distração para trocar de atividade. O código é mais curto e mais fácil de ler e editar com a turma.</p>
+      </div>
+      <div class="panel">
+        <span class="tag soon">Viável e opcional</span>
+        <h3>Modo Menu (Multi-Jogos)</h3>
+        <p class="muted">Funciona com folga no ESP32 DevKit V1 (cada jogo usa seu próprio espaço no <span class="mono">Preferences</span>). Ideal para estações de revisão livre ou feiras, e o painel lê todos os jogos jogados em uma única conexão USB.</p>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top: 20px;">
+      <div class="qcard-head">
+        <h3>Escolha quais jogos autorais entram no menu (<span id="menu-count">5 de 5 jogos no menu</span>)</h3>
+      </div>
+      <div class="check-row">
+        <label class="check"><input type="checkbox" data-menu-game="pixelmath" checked> PixelMath (Matemática)</label>
+        <label class="check"><input type="checkbox" data-menu-game="acentoquest" checked> AcentoQuest (Português)</label>
+        <label class="check"><input type="checkbox" data-menu-game="ciclofis" checked> CicloFis (Ciências)</label>
+        <label class="check"><input type="checkbox" data-menu-game="regiomap" checked> RegioMap (Geografia)</label>
+        <label class="check"><input type="checkbox" data-menu-game="algoritmando" checked> Algoritmando (Lógica)</label>
+      </div>
+      <p class="status" id="menu-status" role="status"></p>
+    </div>
+
+    <div class="menu-grid">
+      <div class="panel">
+        <div class="qcard-head">
+          <h3>Prévia do Menu colorido</h3>
+          <button class="btn small" type="button" id="menu-back">Voltar ao menu</button>
+        </div>
+        <div class="hero-device">
+          <div id="menu-console"></div>
+          <p class="caption">Use Cima/Baixo + Ação para escolher. Dentro de um jogo, segure Ação por 2s (ou clique em "Voltar ao menu").</p>
+        </div>
+        <div class="send-row">
+          <button class="btn small" type="button" id="menu-send-panel">Mandar leituras para o painel (demonstração)</button>
+          <span class="status" id="menu-send-status" role="status"></span>
+        </div>
+      </div>
+
+      <div class="codebox">
+        <div class="codebar">
+          <b class="mono">ESPlayMenu.ino</b>
+          <div class="codebar-acts">
+            <button class="btn small" type="button" id="menu-dl-code">Baixar ESPlayMenu.ino</button>
+            <button class="btn small primary" type="button" id="menu-copy-code">Copiar código</button>
+          </div>
+        </div>
+        <pre><code id="menu-code"></code></pre>
+      </div>
+    </div>
+  </section>
+
   <section id="criador">
     <div class="sec-head">
       <p class="eyebrow">Criador de jogos</p>
       <h2>Monte o seu quiz para o ESPlay</h2>
-      <p>Professores e alunos podem escrever perguntas, definir categorias para o painel, testar na prévia e baixar o código pronto para gravar no ESP32. Tudo fica salvo neste navegador.</p>
+      <p>Professores e alunos podem escrever perguntas, definir categorias para o painel, testar na prévia colorida 160×128 e baixar o código pronto (compatível direto com o ST7735S). Tudo fica salvo neste navegador.</p>
     </div>
 
     <div class="toolbar">
@@ -305,7 +366,7 @@
             <h3>3. Perguntas (<span id="creator-qcount">0 perguntas</span>)</h3>
             <button class="btn small primary" type="button" id="cr-add-q">+ Nova pergunta</button>
           </div>
-          <p class="muted small">Na tela do console, o texto aparece sem acentos e em caixa simples. Use frases curtas e diretas.</p>
+          <p class="muted small">Na tela do console, o texto aparece sem acentos na fonte padrão do TFT. Use frases curtas e diretas.</p>
           <div class="qcards" id="cr-questions"></div>
         </div>
       </div>
@@ -313,7 +374,7 @@
       <div class="creator-side">
         <div class="panel">
           <div class="qcard-head">
-            <h3>Prévia ao vivo</h3>
+            <h3>Prévia ao vivo (160×128)</h3>
             <button class="btn small" type="button" id="cr-restart">Reiniciar prévia</button>
           </div>
           <div class="hero-device">
@@ -438,7 +499,7 @@
     <div class="sec-head">
       <p class="eyebrow">Guia do professor e FAQ</p>
       <h2>Dúvidas comuns em sala de aula</h2>
-      <p>Orientações rápidas para montar o ambiente, gravar os jogos nos consoles e ler as estatísticas sem dor de cabeça.</p>
+      <p>Orientações rápidas para montar o ambiente, gravar os jogos nos consoles e ler as estatísticas.</p>
     </div>
     <div class="faq-list">
       <details class="faq-item">
@@ -446,37 +507,37 @@
         <p>Na primeira vez que o jogo é gravado, o ESPlay pede o número do aluno (1 a 999). Use <b>Cima/Baixo</b> para mudar de 1 em 1, <b>Esquerda/Direita</b> de 10 em 10 e <b>Ação</b> para salvar. Para trocar o número depois, segure <b>Esquerda + Direita</b> ao ligar o console, ou envie <span class="mono">ID 12</span> pelo Monitor Serial a 115200 baud.</p>
       </details>
       <details class="faq-item">
-        <summary>Se eu gravar outro jogo, perco os recordes ou o número do aluno?</summary>
-        <p>Não, desde que a opção <b>Erase All Flash Before Sketch Upload</b> esteja desativada no menu Ferramentas da Arduino IDE. Cada jogo grava suas estatísticas em um espaço próprio da memória flash (usando o <span class="mono">gameId</span>) e o número do aluno fica salvo separado.</p>
+        <summary>Se eu gravar outro jogo ou alternar entre modo unitário e menu, perco os dados?</summary>
+        <p>Não, desde que a opção <b>Erase All Flash Before Sketch Upload</b> esteja desativada no menu Ferramentas da Arduino IDE. Cada jogo grava suas estatísticas em um espaço próprio na memória flash (<span class="mono">Preferences</span>), compartilhado entre o modo unitário e o modo menu.</p>
       </details>
       <details class="faq-item">
         <summary>Por que as palavras aparecem sem acento na tela do console?</summary>
-        <p>A fonte padrão da biblioteca gráfica usada no ESP32 só tem caracteres ASCII simples (sem acentos nem cedilha). O site e o Criador de jogos já removem os acentos na tela simulada e no código <span class="mono">.ino</span> automaticamente, mantendo os acentos normais nas fichas e no painel do professor.</p>
+        <p>A fonte padrão da <span class="mono">Adafruit_GFX</span> no ESP32 só tem caracteres ASCII simples (sem acentos nem cedilha). Os jogos e o Criador já removem os acentos no código <span class="mono">.ino</span> e na tela simulada, mantendo a grafia completa nas fichas e no painel do professor.</p>
       </details>
       <details class="faq-item">
         <summary>O botão "Ler console pela USB" não funciona no meu navegador. O que faço?</summary>
-        <p>A leitura direta pela USB usa a API Web Serial, disponível no <b>Google Chrome</b> e no <b>Microsoft Edge</b> para computador. Em outros navegadores (como Firefox ou Safari), abra o Monitor Serial da Arduino IDE a <b>115200 baud</b>, envie <span class="mono">ESPLAY?</span>, copie a linha JSON que o console responder e use o botão <b>Colar dados</b> no painel.</p>
+        <p>A leitura direta pela USB usa a API Web Serial, disponível no <b>Google Chrome</b> e no <b>Microsoft Edge</b> para computador. Em outros navegadores, abra o Monitor Serial da Arduino IDE a <b>115200 baud</b>, envie <span class="mono">ESPLAY?</span>, copie as linhas JSON respondidas (1 linha no modo unitário, ou várias no modo menu) e cole em <b>Colar dados</b>.</p>
       </details>
       <details class="faq-item">
         <summary>Os nomes dos alunos ficam salvos em algum servidor?</summary>
-        <p>Não. Por respeito à LGPD e à privacidade escolar, o console guarda apenas o número do aluno, e o site salva nomes, turmas e leituras exclusivamente no navegador deste computador (<span class="mono">localStorage</span>). Use <b>Salvar cópia (JSON)</b> para transferir a turma para outro computador.</p>
+        <p>Não. Por respeito à LGPD e à privacidade escolar, o console guarda apenas o número do aluno, e o site salva nomes, turmas e leituras exclusivamente no navegador deste computador (<span class="mono">localStorage</span>). Use <b>Salvar cópia (JSON)</b> para levar a turma a outro computador.</p>
       </details>
       <details class="faq-item">
         <summary>Como compartilhar um jogo criado no Criador de jogos com outros professores?</summary>
-        <p>No Criador de jogos, use <b>Salvar quiz (.json)</b> para passar as perguntas a outro professor (que pode reabrir o arquivo em <b>Abrir quiz (.json)</b> e editar), ou baixe o arquivo <span class="mono">.ino</span> pronto e o trecho de JSON da ficha para incluir o jogo na biblioteca do projeto.</p>
+        <p>No Criador de jogos, use <b>Salvar quiz (.json)</b> para passar as perguntas a outro professor (que pode reabrir em <b>Abrir quiz (.json)</b> e editar), ou baixe o <span class="mono">.ino</span> pronto direto para a Arduino IDE.</p>
       </details>
     </div>
   </section>
 
   <section id="novidades">
     <div class="sec-head">
-      <p class="eyebrow">Em breve</p>
-      <h2>O que ainda depende do console físico</h2>
+      <p class="eyebrow">Em andamento</p>
+      <h2>Próximos passos do projeto</h2>
     </div>
     <div class="road">
-      <div class="panel"><span class="tag soon">Aguardando hardware</span><h3>Prévia e biblioteca na tela colorida</h3><p class="muted">O console já usa o LCD ST7735 de 128×160. Faltam confirmar os pinos do display, as bibliotecas e a orientação (em pé ou deitada) para atualizar a engine e a prévia do site.</p></div>
-      <div class="panel"><span class="tag soon">Aguardando hardware</span><h3>Esquema de ligação e lista final</h3><p class="muted">O STL final (<span class="mono">CaseESPboyV4.stl</span>) já está disponível para download e visualização 3D. Faltam apenas o esquema definitivo de pinos e a lista final de peças com bateria.</p></div>
-      <div class="panel"><span class="tag soon">Próximo passo</span><h3>Leitura real pela USB</h3><p class="muted">Confirmar com o console montado a resposta ao comando serial do painel e avaliar gravação direta pelo navegador.</p></div>
+      <div class="panel"><span class="tag soon">Teste em campo</span><h3>Validação dos 5 jogos e USB na escola</h3><p class="muted">Testar todos os sketches autônomos, o modo menu opcional e a leitura real via Web Serial com a turma.</p></div>
+      <div class="panel"><span class="tag soon">Hardware</span><h3>Alimentação portátil por bateria</h3><p class="muted">Definir módulo de bateria e carregador para o uso fora do cabo USB.</p></div>
+      <div class="panel"><span class="tag soon">Futuro</span><h3>Gravação direta pelo navegador</h3><p class="muted">Avaliar envio de binários compilados direto via Web Serial, sem abrir a Arduino IDE.</p></div>
       <div class="panel"><span class="tag soon">Futuro</span><h3>Biblioteca comunitária</h3><p class="muted">Espaço para receber e publicar quizzes criados por professores de outras escolas.</p></div>
     </div>
   </section>
@@ -486,7 +547,7 @@
 <div class="wrap">
   <footer>
     <span><b>ESPlay</b>, console maker educacional</span>
-    <span>Versão de demonstração. Os dados marcados como exemplo são fictícios.</span>
+    <span>Versão com hardware ST7735S 160×128 validado e STL oficial (<span class="mono">CaseESPboyV5.stl</span>). Dados marcados como exemplo no painel são fictícios.</span>
   </footer>
 </div>
 

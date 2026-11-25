@@ -1,14 +1,23 @@
-// Prévia do console no navegador: tela simulada, botões e os jogos do ESPlay.
-// Atenção: a tela simulada ainda usa 128x64 (OLED do primeiro protótipo) até a
-// confirmação dos pinos, orientação e sketch do display LCD ST7735 128x160.
+// Prévia colorida do console ESPlay no navegador: tela ST7735S 160x128 (modo paisagem),
+// botões (UP=32, DOWN=33, LEFT=26, RIGHT=27, ACTION=25), os 5 jogos autorais, Quiz e Menu.
 
 import { $, $$, zeros } from './util.js';
 
-// TODO (hardware): ao migrar para a prévia colorida 128x160 (ou 160x128), ajustar W, H e cores aqui.
-export const W = 128;
-export const H = 64;
-const OFF = [5, 7, 11];
-const ON = [191, 227, 255];
+export const W = 160;
+export const H = 128;
+
+export const COL = {
+  BG: '#000000',
+  WHITE: '#FFFFFF',
+  YELLOW: '#FFE600',
+  CYAN: '#00E5FF',
+  GREEN: '#22E55A',
+  RED: '#FF3838',
+  BLUE: '#2563EB',
+  ORANGE: '#FF9500',
+  GRAY: '#8A94A6',
+  DKGRAY: '#3A4252',
+};
 
 export const reduced = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 
@@ -32,61 +41,83 @@ function shuffle(arr) {
   return arr;
 }
 
-/* ---------- Tela ---------- */
+/* ---------- Tela ST7735S 160x128 colorida ---------- */
 export class Screen {
   constructor(cv) {
     this.cv = cv;
     cv.width = W;
     cv.height = H;
-    this.ctx = cv.getContext('2d');
-    this.off = document.createElement('canvas');
-    this.off.width = W;
-    this.off.height = H;
-    this.g = this.off.getContext('2d', { willReadFrequently: true });
+    this.g = cv.getContext('2d');
     this.g.textBaseline = 'top';
+    this.g.imageSmoothingEnabled = false;
   }
-  clear() {
-    this.g.fillStyle = '#000';
+  clear(color = COL.BG) {
+    this.g.fillStyle = color;
     this.g.fillRect(0, 0, W, H);
-    this.g.fillStyle = '#fff';
   }
   font(size) {
     this.g.font = 8 * (size || 1) + 'px Silkscreen, monospace';
   }
-  text(x, y, s, size = 1, on = true) {
+  text(x, y, s, size = 1, color = COL.WHITE) {
     this.font(size);
-    this.g.fillStyle = on ? '#fff' : '#000';
+    this.g.fillStyle = color;
     this.g.fillText(String(s), x, y);
   }
   measure(s, size = 1) {
     this.font(size);
     return Math.round(this.g.measureText(String(s)).width);
   }
-  textCenter(cx, y, s, size = 1, on = true) {
-    this.text(Math.round(cx - this.measure(s, size) / 2), y, s, size, on);
+  textCenter(cx, y, s, size = 1, color = COL.WHITE) {
+    this.text(Math.round(cx - this.measure(s, size) / 2), y, s, size, color);
   }
-  line(x0, y0, x1, y1, on = true) {
+  line(x0, y0, x1, y1, color = COL.WHITE) {
     const g = this.g;
-    g.strokeStyle = on ? '#fff' : '#000';
+    g.strokeStyle = color;
     g.lineWidth = 1;
     g.beginPath();
     g.moveTo(x0 + 0.5, y0 + 0.5);
     g.lineTo(x1 + 0.5, y1 + 0.5);
     g.stroke();
   }
-  rect(x, y, w, h, on = true) {
+  rect(x, y, w, h, color = COL.WHITE) {
     const g = this.g;
-    g.strokeStyle = on ? '#fff' : '#000';
+    g.strokeStyle = color;
     g.lineWidth = 1;
     g.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
   }
-  fillRect(x, y, w, h, on = true) {
-    this.g.fillStyle = on ? '#fff' : '#000';
+  fillRect(x, y, w, h, color = COL.WHITE) {
+    this.g.fillStyle = color;
     this.g.fillRect(x, y, w, h);
   }
-  tri(x0, y0, x1, y1, x2, y2, on = true) {
+  _rrPath(x, y, w, h, r) {
     const g = this.g;
-    g.fillStyle = on ? '#fff' : '#000';
+    const rad = Math.min(r, w / 2, h / 2);
+    g.beginPath();
+    g.moveTo(x + rad, y);
+    g.lineTo(x + w - rad, y);
+    g.quadraticCurveTo(x + w, y, x + w, y + rad);
+    g.lineTo(x + w, y + h - rad);
+    g.quadraticCurveTo(x + w, y + h, x + w - rad, y + h);
+    g.lineTo(x + rad, y + h);
+    g.quadraticCurveTo(x, y + h, x, y + h - rad);
+    g.lineTo(x, y + rad);
+    g.quadraticCurveTo(x, y, x + rad, y);
+    g.closePath();
+  }
+  roundRect(x, y, w, h, r, color = COL.WHITE) {
+    this.g.strokeStyle = color;
+    this.g.lineWidth = 1;
+    this._rrPath(x + 0.5, y + 0.5, w - 1, h - 1, r);
+    this.g.stroke();
+  }
+  fillRoundRect(x, y, w, h, r, color = COL.WHITE) {
+    this.g.fillStyle = color;
+    this._rrPath(x, y, w, h, r);
+    this.g.fill();
+  }
+  tri(x0, y0, x1, y1, x2, y2, color = COL.WHITE) {
+    const g = this.g;
+    g.fillStyle = color;
     g.beginPath();
     g.moveTo(x0, y0);
     g.lineTo(x1, y1);
@@ -94,7 +125,7 @@ export class Screen {
     g.closePath();
     g.fill();
   }
-  wrapText(x, y, maxW, lineH, s, size = 1, on = true) {
+  wrapText(x, y, maxW, lineH, s, size = 1, color = COL.WHITE) {
     const words = String(s || '').split(/\s+/).filter(Boolean);
     let line = '';
     let cy = y;
@@ -103,45 +134,33 @@ export class Screen {
       if (this.measure(test, size) <= maxW || !line) {
         line = test;
       } else {
-        this.text(x, cy, line, size, on);
+        this.text(x, cy, line, size, color);
         cy += lineH;
         line = w;
       }
     }
     if (line) {
-      this.text(x, cy, line, size, on);
+      this.text(x, cy, line, size, color);
       cy += lineH;
     }
     return cy;
   }
-  drawArrow(cx, cy, dir, on = true) {
-    // 0: cima, 1: baixo, 2: esquerda, 3: direita
+  drawArrow(cx, cy, dir, color = COL.WHITE) {
     if (dir === 0) {
-      this.tri(cx, cy - 5, cx - 4, cy, cx + 4, cy, on);
-      this.fillRect(cx - 1, cy, 3, 5, on);
+      this.tri(cx, cy - 6, cx - 5, cy, cx + 5, cy, color);
+      this.fillRect(cx - 2, cy, 5, 6, color);
     } else if (dir === 1) {
-      this.tri(cx, cy + 5, cx - 4, cy, cx + 4, cy, on);
-      this.fillRect(cx - 1, cy - 5, 3, 5, on);
+      this.tri(cx, cy + 6, cx - 5, cy, cx + 5, cy, color);
+      this.fillRect(cx - 2, cy - 6, 5, 6, color);
     } else if (dir === 2) {
-      this.tri(cx - 5, cy, cx, cy - 4, cx, cy + 4, on);
-      this.fillRect(cx, cy - 1, 5, 3, on);
+      this.tri(cx - 6, cy, cx, cy - 5, cx, cy + 5, color);
+      this.fillRect(cx, cy - 2, 6, 5, color);
     } else {
-      this.tri(cx + 5, cy, cx, cy - 4, cx, cy + 4, on);
-      this.fillRect(cx - 5, cy - 1, 5, 3, on);
+      this.tri(cx + 6, cy, cx, cy - 5, cx, cy + 5, color);
+      this.fillRect(cx - 6, cy - 2, 6, 5, color);
     }
   }
-  show() {
-    const d = this.g.getImageData(0, 0, W, H).data;
-    const o = this.ctx.createImageData(W, H);
-    for (let i = 0; i < W * H; i++) {
-      const on = d[i * 4] > 110;
-      o.data[i * 4] = on ? ON[0] : OFF[0];
-      o.data[i * 4 + 1] = on ? ON[1] : OFF[1];
-      o.data[i * 4 + 2] = on ? ON[2] : OFF[2];
-      o.data[i * 4 + 3] = 255;
-    }
-    this.ctx.putImageData(o, 0, 0);
-  }
+  show() { /* renderização direta em cores no canvas */ }
 }
 
 /* ---------- Botões ---------- */
@@ -214,30 +233,42 @@ export class BaseGame {
     this.resetPend();
     if (this.onSave) this.onSave();
   }
+  drawTitle(titulo, subtitulo) {
+    const s = this.s;
+    const sz = s.measure(titulo, 2) <= W - 12 ? 2 : 1;
+    s.textCenter(W / 2, sz === 2 ? 12 : 16, titulo, sz, COL.CYAN);
+    s.textCenter(W / 2, 36, subtitulo, 1, COL.GRAY);
+    s.textCenter(W / 2, 58, 'Aluno: ' + this.sid, 1, COL.WHITE);
+    s.textCenter(W / 2, 74, 'Recorde: ' + this.stats.best, 1, COL.YELLOW);
+    s.textCenter(W / 2, 104, 'Aperte ACAO', 1, COL.GREEN);
+  }
   drawRoundEnd(acertos, total) {
     const s = this.s;
-    s.textCenter(W / 2, 0, 'FIM DA RODADA', 1);
-    s.line(0, 10, W - 1, 10, true);
-    s.text(0, 15, 'Acertos: ' + acertos + '/' + total);
-    s.text(0, 26, 'Pts: ' + this.score);
-    s.text(0, 38, this.recorde ? 'NOVO RECORDE!' : 'Recorde: ' + this.stats.best);
-    s.textCenter(W / 2, H - 10, 'ACAO: jogar de novo', 1);
+    s.textCenter(W / 2, 10, 'FIM DA RODADA', 1, COL.CYAN);
+    s.line(0, 22, W - 1, 22, COL.DKGRAY);
+    s.textCenter(W / 2, 34, 'Acertos: ' + acertos + '/' + total, 1, COL.WHITE);
+    s.textCenter(W / 2, 52, 'Pts: ' + this.score, 2, COL.YELLOW);
+    s.textCenter(W / 2, 76, this.recorde ? 'NOVO RECORDE!' : 'Recorde: ' + this.stats.best, 1, this.recorde ? COL.GREEN : COL.WHITE);
+    s.textCenter(W / 2, 106, 'ACAO: jogar de novo', 1, COL.GREEN);
   }
   drawTopProg(cur, total, rightTxt, timerSec) {
     const s = this.s;
-    const left = timerSec > 0 ? `${cur}/${total} ${timerSec}s` : `${cur}/${total}`;
-    s.text(0, 0, left);
-    s.text(W - s.measure(rightTxt), 0, rightTxt);
+    const left = timerSec > 0 ? `${cur}/${total}  ${timerSec}s` : `${cur}/${total}`;
+    s.text(4, 4, left, 1, timerSec > 0 && timerSec <= 3 ? COL.RED : COL.WHITE);
+    s.text(W - s.measure(rightTxt) - 4, 4, rightTxt, 1, COL.YELLOW);
+    s.line(0, 15, W - 1, 15, COL.DKGRAY);
   }
-  drawOptions(labels, selected, y0 = 32) {
+  drawOptions(labels, selected, y0 = 56, step = 22, h = 18) {
     const s = this.s;
     labels.forEach((lbl, i) => {
-      const oy = y0 + i * 10;
+      const oy = y0 + i * step;
       if (i === selected) {
-        s.fillRect(0, oy - 1, W, 9, true);
-        s.text(4, oy, lbl, 1, false);
+        s.fillRoundRect(6, oy, W - 12, h, 4, COL.BLUE);
+        s.roundRect(6, oy, W - 12, h, 4, COL.CYAN);
+        s.text(14, oy + Math.round((h - 8) / 2), lbl, 1, COL.WHITE);
       } else {
-        s.text(4, oy, lbl, 1, true);
+        s.roundRect(6, oy, W - 12, h, 4, COL.DKGRAY);
+        s.text(14, oy + Math.round((h - 8) / 2), lbl, 1, COL.GRAY);
       }
     });
   }
@@ -246,13 +277,13 @@ export class BaseGame {
 /* ---------- 1. PixelMath ---------- */
 export class PixelMath extends BaseGame {
   constructor(scr, cfg) {
-    super(scr, { tabuada: 0, v0: 0.5, vmax: 1.5, acc: 0.03, ...(cfg || {}) });
-    this.colX = [0, 1, 2].map((i) => Math.round((W * (2 * i + 1)) / 6));
-    this.startY = 12;
-    this.catchY = H - 16;
+    super(scr, { tabuada: 0, v0: 0.8, vmax: 2.2, acc: 0.05, ...(cfg || {}) });
+    this.colX = [27, 80, 133];
+    this.startY = 24;
+    this.catchY = H - 28;
     this.playerCol = 1;
     this.vel = this.cfg.v0;
-    this.ansY = 0;
+    this.ansY = this.startY;
     this.qid = 0;
     this.ans = [0, 0, 0];
     this.correctIndex = 0;
@@ -308,22 +339,23 @@ export class PixelMath extends BaseGame {
     const s = this.s;
     s.clear();
     if (this.tela === 'TITULO') {
-      s.textCenter(W / 2, 0, 'PIXELMATH', 2);
-      s.text(0, 22, 'Aluno: ' + this.sid);
-      s.text(0, 33, 'Recorde: ' + this.stats.best);
-      s.textCenter(W / 2, 52, 'Aperte ACAO');
+      this.drawTitle('PIXELMATH', 'Tabuada em 3 colunas');
     } else if (this.tela === 'FIM') {
-      s.textCenter(W / 2, 0, 'GAME OVER', 2);
-      s.text(0, 20, 'Era: ' + this.a + ' x ' + this.b + ' = ' + this.ultima);
-      s.text(0, 31, 'Pts: ' + this.score);
-      s.text(0, 42, this.recorde ? 'NOVO RECORDE!' : 'Recorde: ' + this.stats.best);
-      s.textCenter(W / 2, 54, 'ACAO: jogar de novo');
+      s.textCenter(W / 2, 10, 'GAME OVER', 2, COL.RED);
+      s.textCenter(W / 2, 38, 'Era: ' + this.a + ' x ' + this.b + ' = ' + this.ultima, 1, COL.YELLOW);
+      s.textCenter(W / 2, 56, 'Pts: ' + this.score, 2, COL.WHITE);
+      s.textCenter(W / 2, 80, this.recorde ? 'NOVO RECORDE!' : 'Recorde: ' + this.stats.best, 1, this.recorde ? COL.GREEN : COL.YELLOW);
+      s.textCenter(W / 2, 106, 'ACAO: jogar de novo', 1, COL.GREEN);
     } else {
-      s.text(0, 0, 'P:' + this.score);
-      s.textCenter(W / 2 + 10, 0, this.a + ' x ' + this.b + ' = ?');
-      for (let i = 0; i < 3; i++) s.textCenter(this.colX[i], Math.round(this.ansY), this.ans[i]);
+      s.text(4, 4, 'P:' + this.score, 1, COL.WHITE);
+      const conta = this.a + ' x ' + this.b + ' = ?';
+      s.text(W - s.measure(conta, 2) - 4, 2, conta, 2, COL.CYAN);
+      s.line(0, 19, W - 1, 19, COL.DKGRAY);
+      for (let i = 0; i < 3; i++) {
+        s.textCenter(this.colX[i], Math.round(this.ansY), this.ans[i], 2, COL.YELLOW);
+      }
       const px = this.colX[this.playerCol];
-      s.tri(px - 6, H - 1, px + 6, H - 1, px, H - 7);
+      s.tri(px - 8, H - 3, px + 8, H - 3, px, H - 15, COL.GREEN);
     }
     s.show();
   }
@@ -435,38 +467,34 @@ export class AcentoQuest extends BaseGame {
     const s = this.s;
     s.clear();
     if (this.tela === 'TITULO') {
-      s.textCenter(W / 2, 0, 'ACENTO', 2);
-      s.textCenter(W / 2, 16, 'QUEST', 1);
-      s.text(0, 28, 'Aluno: ' + this.sid);
-      s.text(0, 38, 'Recorde: ' + this.stats.best);
-      s.textCenter(W / 2, H - 10, 'Aperte ACAO');
+      this.drawTitle('ACENTOQUEST', 'Tonicidade das palavras');
     } else if (this.tela === 'FIM') {
       this.drawRoundEnd(this.acertos, this.cfg.total || 10);
     } else if (this.tela === 'ACERTO') {
-      s.textCenter(W / 2, 14, 'CORRETO!', 2);
-      s.textCenter(W / 2, 36, '+10 pontos', 1);
+      s.textCenter(W / 2, 44, 'CORRETO!', 2, COL.GREEN);
+      s.textCenter(W / 2, 72, '+10 pontos', 1, COL.YELLOW);
     } else if (this.tela === 'FEEDBACK') {
       const p = this.atual;
-      s.text(0, 0, 'ERROU! TONICA:');
-      const sz = s.measure(p.w, 2) <= W - 6 ? 2 : 1;
+      s.textCenter(W / 2, 6, 'ERROU! SILABA TONICA:', 1, COL.RED);
+      const sz = s.measure(p.w, 2) <= W - 12 ? 2 : 1;
       const x0 = Math.round((W - s.measure(p.w, sz)) / 2);
       const pre = p.w.slice(0, p.t0);
       const ton = p.w.slice(p.t0, p.t0 + p.tLen);
       const suf = p.w.slice(p.t0 + p.tLen);
       const preW = pre ? s.measure(pre, sz) : 0;
       const tonW = s.measure(ton, sz);
-      s.fillRect(x0 + preW - 1, 10, tonW + 2, 8 * sz + 2, true);
-      if (pre) s.text(x0, 11, pre, sz, true);
-      s.text(x0 + preW, 11, ton, sz, false);
-      if (suf) s.text(x0 + preW + tonW, 11, suf, sz, true);
-      s.text(0, 30, ACENTO_CATS[p.cat]);
-      s.wrapText(0, 41, W, 10, p.r, 1, true);
+      s.fillRoundRect(x0 + preW - 2, 22, tonW + 4, 8 * sz + 4, 3, COL.YELLOW);
+      if (pre) s.text(x0, 24, pre, sz, COL.WHITE);
+      s.text(x0 + preW, 24, ton, sz, COL.BG);
+      if (suf) s.text(x0 + preW + tonW, 24, suf, sz, COL.WHITE);
+      s.textCenter(W / 2, 52, ACENTO_CATS[p.cat], 1, COL.CYAN);
+      s.wrapText(8, 68, W - 16, 11, p.r, 1, COL.WHITE);
+      s.textCenter(W / 2, 112, 'ACAO: continuar', 1, COL.GRAY);
     } else {
-      this.drawTopProg(this.cur, this.cfg.total || 10, 'P:' + this.score, 0);
-      const sz = s.measure(this.atual.w, 2) <= W - 6 ? 2 : 1;
-      s.textCenter(W / 2, 11, this.atual.w, sz);
-      s.line(0, 29, W - 1, 29, true);
-      this.drawOptions(ACENTO_OPTS, this.sel, 33);
+      this.drawTopProg(this.cur, this.cfg.total || 10, 'Pts:' + this.score, 0);
+      const sz = s.measure(this.atual.w, 2) <= W - 12 ? 2 : 1;
+      s.textCenter(W / 2, sz === 2 ? 26 : 30, this.atual.w, sz, COL.CYAN);
+      this.drawOptions(ACENTO_OPTS, this.sel, 56, 22, 18);
     }
     s.show();
   }
@@ -597,28 +625,24 @@ export class CicloFis extends BaseGame {
     const s = this.s;
     s.clear();
     if (this.tela === 'TITULO') {
-      s.textCenter(W / 2, 0, 'CICLOFIS', 2);
-      s.text(0, 22, 'Aluno: ' + this.sid);
-      s.text(0, 33, 'Recorde: ' + this.stats.best);
-      s.textCenter(W / 2, H - 10, 'Aperte ACAO');
+      this.drawTitle('CICLOFIS', 'Mudancas de estado fisico');
     } else if (this.tela === 'FIM') {
       this.drawRoundEnd(this.acertos, this.cfg.total || 10);
     } else if (this.tela === 'ACERTO') {
-      s.textCenter(W / 2, 14, 'CORRETO!', 2);
-      s.textCenter(W / 2, 36, '+10 pontos', 1);
+      s.textCenter(W / 2, 44, 'CORRETO!', 2, COL.GREEN);
+      s.textCenter(W / 2, 72, '+10 pontos', 1, COL.YELLOW);
     } else if (this.tela === 'FEEDBACK') {
-      s.text(0, 0, this.timeout ? 'TEMPO ESGOTADO!' : 'ERROU! ERA:');
+      s.textCenter(W / 2, 10, this.timeout ? 'TEMPO ESGOTADO!' : 'ERROU! ERA:', 1, COL.RED);
       const nome = CICLO_MUD[this.atual.c];
-      const sz = s.measure(nome, 2) <= W - 4 ? 2 : 1;
-      s.textCenter(W / 2, sz === 2 ? 14 : 18, nome, sz);
-      s.textCenter(W / 2, 36, CICLO_SENT[this.atual.c], 1);
-      s.textCenter(W / 2, H - 10, 'Aguarde...', 1);
+      const sz = s.measure(nome, 2) <= W - 12 ? 2 : 1;
+      s.textCenter(W / 2, sz === 2 ? 32 : 36, nome, sz, COL.YELLOW);
+      s.textCenter(W / 2, 66, CICLO_SENT[this.atual.c], 1, COL.CYAN);
+      s.textCenter(W / 2, 108, 'Aguarde...', 1, COL.GRAY);
     } else {
       const seg = this.cfg.tempo > 0 ? Math.ceil(this.timer / 30) : 0;
-      this.drawTopProg(this.cur, this.cfg.total || 10, 'P:' + this.score, seg);
-      s.wrapText(0, 10, W, 9, this.atual.t, 1, true);
-      s.line(0, 29, W - 1, 29, true);
-      this.drawOptions(this.opts.map((c, i) => `${i + 1}. ${CICLO_MUD[c]}`), this.sel, 33);
+      this.drawTopProg(this.cur, this.cfg.total || 10, 'Pts:' + this.score, seg);
+      s.wrapText(6, 22, W - 12, 11, this.atual.t, 1, COL.WHITE);
+      this.drawOptions(this.opts.map((c, i) => `${i + 1}. ${CICLO_MUD[c]}`), this.sel, 56, 22, 18);
     }
     s.show();
   }
@@ -739,26 +763,23 @@ export class RegioMap extends BaseGame {
     const s = this.s;
     s.clear();
     if (this.tela === 'TITULO') {
-      s.textCenter(W / 2, 0, 'REGIOMAP', 2);
-      s.text(0, 22, 'Aluno: ' + this.sid);
-      s.text(0, 33, 'Recorde: ' + this.stats.best);
-      s.textCenter(W / 2, H - 10, 'Aperte ACAO');
+      this.drawTitle('REGIOMAP', 'Estados e capitais');
     } else if (this.tela === 'FIM') {
       this.drawRoundEnd(this.acertos, this.cfg.total || 10);
     } else if (this.tela === 'ACERTO') {
-      s.textCenter(W / 2, 14, 'CORRETO!', 2);
-      s.textCenter(W / 2, 36, '+10 pontos', 1);
+      s.textCenter(W / 2, 44, 'CORRETO!', 2, COL.GREEN);
+      s.textCenter(W / 2, 72, '+10 pontos', 1, COL.YELLOW);
     } else if (this.tela === 'FEEDBACK') {
-      s.text(0, 0, 'RESPOSTA CERTA:');
-      s.text(0, 13, this.atual.e);
-      s.text(0, 25, this.atual.c);
-      s.text(0, 38, 'Regiao: ' + REG_NOMES[this.atual.r]);
-      s.textCenter(W / 2, H - 10, 'ACAO: continuar');
+      s.textCenter(W / 2, 10, 'RESPOSTA CERTA:', 1, COL.RED);
+      s.textCenter(W / 2, 32, this.atual.e, 1, COL.WHITE);
+      const sz = s.measure(this.atual.c, 2) <= W - 12 ? 2 : 1;
+      s.textCenter(W / 2, 52, this.atual.c, sz, COL.GREEN);
+      s.textCenter(W / 2, 80, 'Regiao: ' + REG_NOMES[this.atual.r], 1, COL.YELLOW);
+      s.textCenter(W / 2, 108, 'ACAO: continuar', 1, COL.GRAY);
     } else {
-      this.drawTopProg(this.cur, this.cfg.total || 10, 'P:' + this.score, 0);
-      s.textCenter(W / 2, 14, this.atual.e, 1);
-      s.line(0, 27, W - 1, 27, true);
-      this.drawOptions(this.opts.map((u, i) => `${i + 1}. ${u.c}`), this.sel, 32);
+      this.drawTopProg(this.cur, this.cfg.total || 10, 'Pts:' + this.score, 0);
+      s.textCenter(W / 2, 28, this.atual.e, 1, COL.YELLOW);
+      this.drawOptions(this.opts.map((u, i) => `${i + 1}. ${u.c}`), this.sel, 52, 23, 19);
     }
     s.show();
   }
@@ -886,42 +907,48 @@ export class Algoritmando extends BaseGame {
     const s = this.s;
     s.clear();
     if (this.tela === 'TITULO') {
-      s.rect(4, 2, W - 8, 16, true);
-      s.drawArrow(14, 10, 3, true);
-      s.textCenter(W / 2, 6, 'ALGORITMANDO', 1);
-      s.drawArrow(W - 14, 10, 2, true);
-      s.text(0, 24, 'Aluno: ' + this.sid);
-      s.text(0, 35, 'Recorde: ' + this.stats.best);
-      s.textCenter(W / 2, H - 10, 'Aperte ACAO');
+      s.roundRect(4, 8, W - 8, 24, 5, COL.CYAN);
+      s.drawArrow(15, 20, 3, COL.YELLOW);
+      s.textCenter(W / 2, 16, 'ALGORITMANDO', 1, COL.WHITE);
+      s.drawArrow(W - 15, 20, 2, COL.YELLOW);
+      s.textCenter(W / 2, 44, 'Sequencias Logicas', 1, COL.GRAY);
+      s.textCenter(W / 2, 62, 'Aluno: ' + this.sid, 1, COL.WHITE);
+      s.textCenter(W / 2, 78, 'Recorde: ' + this.stats.best, 1, COL.YELLOW);
+      s.textCenter(W / 2, 104, 'Aperte ACAO', 1, COL.GREEN);
     } else if (this.tela === 'FIM') {
-      this.drawRoundEnd(this.acertos, this.cfg.total || 10);
+      s.textCenter(W / 2, 8, 'FIM DA PARTIDA', 1, COL.CYAN);
+      s.line(0, 20, W - 1, 20, COL.DKGRAY);
+      s.textCenter(W / 2, 32, 'Acertos: ' + this.acertos + '/' + (this.cfg.total || 10), 1, COL.WHITE);
+      s.textCenter(W / 2, 50, 'Pts: ' + this.score, 2, COL.YELLOW);
+      s.textCenter(W / 2, 74, this.recorde ? 'NOVO RECORDE!' : 'Recorde: ' + this.stats.best, 1, this.recorde ? COL.GREEN : COL.WHITE);
+      s.textCenter(W / 2, 104, 'ACAO: jogar de novo', 1, COL.GREEN);
     } else if (this.tela === 'ACERTO') {
-      s.textCenter(W / 2, 14, 'CORRETO!', 2);
-      s.textCenter(W / 2, 36, '+10 pontos', 1);
+      s.textCenter(W / 2, 44, 'CORRETO!', 2, COL.GREEN);
+      s.textCenter(W / 2, 72, '+10 pontos', 1, COL.YELLOW);
     } else if (this.tela === 'FEEDBACK') {
-      s.text(0, 0, this.timeout ? 'TEMPO ESGOTADO!' : 'ERROU!');
-      s.text(0, 13, this.regra);
-      s.text(0, 32, 'Seta certa:');
-      s.rect(74, 26, 18, 18, true);
-      s.drawArrow(83, 35, this.certa, true);
-      s.text(96, 32, DIR_NOMES[this.certa]);
-      s.textCenter(W / 2, H - 10, 'ACAO: continuar');
+      s.textCenter(W / 2, this.timeout ? 10 : 8, this.timeout ? 'TEMPO ESGOTADO!' : 'ERROU!', this.timeout ? 1 : 2, COL.RED);
+      s.textCenter(W / 2, 32, this.regra, 1, COL.YELLOW);
+      s.text(18, 63, 'Seta certa:', 1, COL.WHITE);
+      s.roundRect(88, 54, 24, 24, 4, COL.GREEN);
+      s.drawArrow(100, 66, this.certa, COL.GREEN);
+      s.text(118, 63, DIR_NOMES[this.certa], 1, COL.GREEN);
+      s.textCenter(W / 2, 108, 'ACAO: continuar', 1, COL.GRAY);
     } else {
       const seg = this.cfg.tempo > 0 ? Math.ceil(this.timer / 30) : 0;
-      this.drawTopProg(this.cur, this.cfg.total || 10, 'P:' + this.score, seg);
-      s.textCenter(W / 2, 12, 'Qual seta completa?', 1);
-      const box = 16, gap = 3, x0 = Math.round((W - (6 * box + 5 * gap)) / 2), y0 = 26;
+      this.drawTopProg(this.cur, this.cfg.total || 10, 'Pts:' + this.score, seg);
+      s.textCenter(W / 2, 26, 'Qual seta completa?', 1, COL.WHITE);
+      const box = 22, gap = 4, x0 = Math.round((W - (6 * box + 5 * gap)) / 2), y0 = 50;
       for (let i = 0; i < 6; i++) {
         const bx = x0 + i * (box + gap);
         if (i === this.lacuna) {
-          s.fillRect(bx, y0, box, box, true);
-          s.text(bx + 5, y0 + 4, '?', 1, false);
+          s.fillRoundRect(bx, y0, box, box, 3, COL.YELLOW);
+          s.text(bx + 6, y0 + 4, '?', 2, COL.BG);
         } else {
-          s.rect(bx, y0, box, box, true);
-          s.drawArrow(bx + box / 2, y0 + box / 2, this.seq[i], true);
+          s.roundRect(bx, y0, box, box, 3, COL.CYAN);
+          s.drawArrow(bx + box / 2, y0 + box / 2, this.seq[i], COL.WHITE);
         }
       }
-      s.textCenter(W / 2, H - 10, 'Aperte a seta certa');
+      s.textCenter(W / 2, 98, 'Aperte a seta certa', 1, COL.CYAN);
     }
     s.show();
   }
@@ -1028,31 +1055,31 @@ export class CustomQuizGame extends BaseGame {
     const title = normalizeAscii(this.cfg.nome || 'MEU QUIZ').toUpperCase();
     const nQs = (this.cfg.perguntas || []).filter((q) => q && q.pergunta).length;
     if (this.tela === 'TITULO') {
-      const sz = s.measure(title, 2) <= W - 4 ? 2 : 1;
-      s.textCenter(W / 2, sz === 2 ? 0 : 4, title.slice(0, 20), sz);
-      s.text(0, 22, 'Aluno: ' + this.sid);
-      s.text(0, 32, 'Recorde: ' + this.stats.best);
-      s.textCenter(W / 2, H - 10, nQs ? 'Aperte ACAO' : 'Sem perguntas');
+      const sz = s.measure(title, 2) <= W - 12 ? 2 : 1;
+      s.textCenter(W / 2, sz === 2 ? 12 : 16, title.slice(0, 22), sz, COL.CYAN);
+      s.textCenter(W / 2, 36, 'Quiz personalizado', 1, COL.GRAY);
+      s.textCenter(W / 2, 58, 'Aluno: ' + this.sid, 1, COL.WHITE);
+      s.textCenter(W / 2, 74, 'Recorde: ' + this.stats.best, 1, COL.YELLOW);
+      s.textCenter(W / 2, 104, nQs ? 'Aperte ACAO' : 'Sem perguntas', 1, nQs ? COL.GREEN : COL.RED);
     } else if (this.tela === 'FIM') {
       this.drawRoundEnd(this.acertos, this.roundTotal || 1);
     } else if (this.tela === 'ACERTO') {
-      s.textCenter(W / 2, 14, 'CORRETO!', 2);
-      s.textCenter(W / 2, 36, '+10 pontos', 1);
+      s.textCenter(W / 2, 44, 'CORRETO!', 2, COL.GREEN);
+      s.textCenter(W / 2, 72, '+10 pontos', 1, COL.YELLOW);
     } else if (this.tela === 'FEEDBACK' && this.atual) {
-      s.text(0, 0, this.timeout ? 'TEMPO ESGOTADO!' : 'RESPOSTA CERTA:');
+      s.textCenter(W / 2, 10, this.timeout ? 'TEMPO ESGOTADO!' : 'RESPOSTA CERTA:', 1, COL.RED);
       const certa = normalizeAscii(this.atual.opcoes[this.atual.correta] || '');
-      s.wrapText(0, 12, W, 10, certa, 1, true);
+      s.wrapText(8, 30, W - 16, 11, certa, 1, COL.GREEN);
       if (this.atual.explicacao) {
-        s.wrapText(0, 26, W, 10, normalizeAscii(this.atual.explicacao), 1, true);
+        s.wrapText(8, 62, W - 16, 11, normalizeAscii(this.atual.explicacao), 1, COL.WHITE);
       }
-      s.textCenter(W / 2, H - 10, 'ACAO: continuar');
+      s.textCenter(W / 2, 108, 'ACAO: continuar', 1, COL.GRAY);
     } else if (this.atual) {
       const seg = this.cfg.tempo > 0 ? Math.ceil(this.timer / 30) : 0;
-      this.drawTopProg(this.cur, this.roundTotal, 'P:' + this.score, seg);
-      s.wrapText(0, 10, W, 9, normalizeAscii(this.atual.pergunta), 1, true);
-      s.line(0, 29, W - 1, 29, true);
-      const opts = this.atual.opcoes.map((o, i) => `${i + 1}. ${normalizeAscii(o).slice(0, 17)}`);
-      this.drawOptions(opts, this.sel, 33);
+      this.drawTopProg(this.cur, this.roundTotal, 'Pts:' + this.score, seg);
+      s.wrapText(6, 20, W - 12, 10, normalizeAscii(this.atual.pergunta), 1, COL.WHITE);
+      const opts = this.atual.opcoes.map((o, i) => `${i + 1}. ${normalizeAscii(o).slice(0, 20)}`);
+      this.drawOptions(opts, this.sel, 56, 22, 18);
     }
     s.show();
   }
@@ -1065,6 +1092,93 @@ export const GAMES_BY_PREVIEW = {
   regiomap: RegioMap,
   algoritmando: Algoritmando,
 };
+
+/* ---------- 7. Modo Menu Multi-Jogos (opcional, somente jogos autorais) ---------- */
+export class MenuGame {
+  constructor(scr, items) {
+    this.s = scr;
+    this.items = [];
+    this.menuIdx = 0;
+    this.active = null;
+    this.holdFrames = 0;
+    this.onChange = null;
+    this.setItems(items || []);
+  }
+  setItems(items) {
+    const oldStats = new Map(this.items.map((it) => [it.id, it.game.stats]));
+    this.items = items.map((it) => {
+      const g = new it.Cls(this.s, it.cfg || {});
+      if (oldStats.has(it.id)) g.stats = oldStats.get(it.id);
+      g.onSave = () => { if (this.onChange) this.onChange(); };
+      return { ...it, game: g };
+    });
+    this.menuIdx = 0;
+    this.active = null;
+    this.holdFrames = 0;
+    if (this.onChange) this.onChange();
+  }
+  backToMenu() {
+    if (!this.active) return;
+    this.active = null;
+    this.holdFrames = 0;
+    this.draw();
+    if (this.onChange) this.onChange();
+  }
+  step(ctl) {
+    if (!this.items.length) return;
+    if (!this.active) {
+      if (ctl.pressed('up')) this.menuIdx = (this.menuIdx + this.items.length - 1) % this.items.length;
+      if (ctl.pressed('down')) this.menuIdx = (this.menuIdx + 1) % this.items.length;
+      if (ctl.pressed('action')) {
+        this.active = this.items[this.menuIdx];
+        this.active.game.tela = 'TITULO';
+        this.holdFrames = 0;
+      }
+      return;
+    }
+    if (ctl.held.action) {
+      this.holdFrames++;
+      if (this.holdFrames >= 60) { this.backToMenu(); return; }
+    } else {
+      this.holdFrames = 0;
+    }
+    this.active.game.step(ctl);
+  }
+  draw() {
+    if (this.active) {
+      this.active.game.draw();
+      return;
+    }
+    const s = this.s;
+    s.clear();
+    s.textCenter(W / 2, 7, 'ESPLAY', 2, COL.RED);
+    s.textCenter(W / 2, 5, 'ESPLAY', 2, COL.YELLOW);
+
+    const n = this.items.length;
+    const h = n >= 5 ? 16 : 19;
+    const step = n >= 5 ? 18 : 22;
+    const y0 = 24;
+
+    this.items.forEach((it, i) => {
+      const y = y0 + i * step;
+      const sel = i === this.menuIdx;
+      if (sel) {
+        s.fillRoundRect(10, y, 140, h, 4, COL.BLUE);
+        s.roundRect(10, y, 140, h, 4, COL.CYAN);
+        s.textCenter(W / 2, y + Math.round((h - 8) / 2), it.nome.toUpperCase(), 1, COL.WHITE);
+        s.tri(17, y + 4, 17, y + h - 4, 24, y + Math.round(h / 2), COL.YELLOW);
+      } else {
+        s.roundRect(10, y, 140, h, 4, COL.DKGRAY);
+        s.textCenter(W / 2, y + Math.round((h - 8) / 2), it.nome.toUpperCase(), 1, COL.GRAY);
+      }
+    });
+
+    const cur = this.items[this.menuIdx];
+    const rec = cur ? cur.game.stats.best : 0;
+    s.textCenter(W / 2, 114, `Rec ${cur ? cur.nome : ''}: ${rec}`, 1, COL.YELLOW);
+    s.show();
+  }
+}
 
 /* ---------- Laço de execução (30 quadros por segundo) ---------- */
 const runners = [];
