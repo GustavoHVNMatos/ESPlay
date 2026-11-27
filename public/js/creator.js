@@ -609,6 +609,15 @@ export function initCreator({ makeConsole, addRunner, onSend, onRegisterMeta }) 
   }
   game.onSave = refreshJson;
 
+  function registerCurrentMeta(silent = false) {
+    if (!onRegisterMeta) return;
+    const id = slugId(state.id || state.nome);
+    const nome = cppStr(state.nome || 'Meu Quiz') || 'Meu Quiz';
+    const tag = cleanTag(state.tag || 'tema');
+    const tagRotulos = Object.fromEntries(state.categorias.map((c) => [String(c.id), c.nome]));
+    onRegisterMeta({ id, nome, tag, tagRotulos }, { silent });
+  }
+
   function syncOutputs() {
     save();
     const valid = state.perguntas.filter((q) => q.pergunta.trim() && q.opcoes.some((o) => o.trim()));
@@ -616,6 +625,7 @@ export function initCreator({ makeConsole, addRunner, onSend, onRegisterMeta }) 
     $('#creator-code').textContent = generateIno(state);
     $('#creator-lib-json').textContent = generateLibrarySnippet(state);
     $('#creator-qcount').textContent = `${valid.length} ${valid.length === 1 ? 'pergunta' : 'perguntas'}`;
+    if (valid.length) registerCurrentMeta(true);
     game.setQuiz(state);
     game.draw();
     refreshJson();
@@ -881,12 +891,14 @@ export function initCreator({ makeConsole, addRunner, onSend, onRegisterMeta }) 
   });
 
   $('#cr-copy-code').addEventListener('click', function () {
+    registerCurrentMeta(false);
     const btn = this;
     const fail = () => { selectNode($('#creator-code')); flash(btn, 'Selecionado: Ctrl+C'); };
     copyText($('#creator-code').textContent, () => flash(btn, 'Copiado'), fail);
   });
 
   $('#cr-dl-code').addEventListener('click', () => {
+    registerCurrentMeta(false);
     const id = slugId(state.id || state.nome);
     download(`${id}.ino`, $('#creator-code').textContent, 'text/plain;charset=utf-8');
   });
@@ -910,9 +922,7 @@ export function initCreator({ makeConsole, addRunner, onSend, onRegisterMeta }) 
     const id = slugId(state.id || state.nome);
     const nome = cppStr(state.nome || 'Meu Quiz') || 'Meu Quiz';
     const tag = cleanTag(state.tag || 'tema');
-    const tagRotulos = Object.fromEntries(state.categorias.map((c) => [String(c.id), c.nome]));
-
-    if (onRegisterMeta) onRegisterMeta({ id, nome, tag, tagRotulos });
+    registerCurrentMeta(false);
     const res = onSend({
       esplay: 1, student: game.sid, game: id, name: nome, tag,
       best: s.best, plays: s.plays, hits: s.hits, misses: s.misses,

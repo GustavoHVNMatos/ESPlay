@@ -33,7 +33,8 @@ const CPP_MODULES = {
     tft.drawFastHLine(0, 19, W, COL_DKGRAY);
   }
   void gerar() {
-    numA = random(1, 10); numB = random(1, 10); int c = numA * numB, w1, w2;
+    numA = (PM_TABUADA >= 1 && PM_TABUADA <= 9) ? PM_TABUADA : random(1, 10);
+    numB = random(1, 10); int c = numA * numB, w1, w2;
     do { w1 = c + random(-5, 6); } while (w1 == c || w1 < 0);
     do { w2 = c + random(-5, 6); } while (w2 == c || w2 == w1 || w2 < 0);
     correctIdx = random(0, 3); int u = 0;
@@ -115,8 +116,14 @@ const CPP_MODULES = {
   enum Tela { TITULO, JOGANDO, ACERTO, FEEDBACK, FIM };
   Tela tela = TITULO; int pool[N], pPos = 0, cur = 0, sel = 0, ac = 0, sc = 0, wait = 0;
   bool rec = false, dirty = true; Pal at;
-  void shuf() { for (int i = 0; i < N; i++) pool[i] = i; for (int i = N - 1; i > 0; i--) { int j = random(0, i + 1); int t = pool[i]; pool[i] = pool[j]; pool[j] = t; } pPos = 0; }
-  void prox() { if (pPos >= N) shuf(); at = BANCO[pool[pPos++]]; sel = 0; cur++; tela = JOGANDO; dirty = true; }
+  void shuf() {
+    int k = 0;
+    for (int i = 0; i < N; i++) if (AQ_CAT < 1 || AQ_CAT > 3 || BANCO[i].cat == AQ_CAT) pool[k++] = i;
+    if (k == 0) { for (int i = 0; i < N; i++) pool[i] = i; k = N; }
+    for (int i = k - 1; i > 0; i--) { int j = random(0, i + 1); int t = pool[i]; pool[i] = pool[j]; pool[j] = t; }
+    pPos = 0;
+  }
+  void prox() { if (pPos >= N || (AQ_CAT >= 1 && AQ_CAT <= 3 && BANCO[pool[pPos]].cat != AQ_CAT)) shuf(); at = BANCO[pool[pPos++]]; sel = 0; cur++; tela = JOGANDO; dirty = true; }
   void reset() { tela = TITULO; dirty = true; }
   void draw() {
     tft.fillScreen(COL_BG);
@@ -124,7 +131,7 @@ const CPP_MODULES = {
       drawCentered("ACENTOQUEST", 12, 2, ST7735_CYAN); drawCentered("Tonicidade das palavras", 36, 1, COL_GRAY);
       drawCentered("ACAO: jogar | Segure 2s: menu", 104, 1, ST7735_GREEN);
     } else if (tela == FIM) {
-      drawRoundResult("FIM DA RODADA", ac, 10, sc, rec);
+      drawRoundResult("FIM DA RODADA", ac, MENU_QTD, sc, rec);
     } else if (tela == ACERTO) {
       drawCentered("CORRETO!", 44, 2, ST7735_GREEN); drawCentered("+10 pontos", 72, 1, ST7735_YELLOW);
     } else if (tela == FEEDBACK) {
@@ -140,7 +147,7 @@ const CPP_MODULES = {
       drawCentered(CATS[at.cat], 52, 1, ST7735_CYAN);
       textoQuebrado(8, 68, W - 16, 11, at.r, ST7735_WHITE);
     } else {
-      drawTopHud(cur, 10, sc);
+      drawTopHud(cur, MENU_QTD, sc);
       uint8_t sz = ((int)strlen(at.w) * 12 <= W - 12) ? 2 : 1;
       drawCentered(at.w, sz == 2 ? 26 : 30, sz, ST7735_CYAN);
       for (int i = 0; i < 3; i++) drawOptBtn(56 + i * 22, 18, OPTS[i], i == sel);
@@ -150,7 +157,7 @@ const CPP_MODULES = {
     if (tela == TITULO || tela == FIM) {
       if (fPr) { cur = 0; ac = 0; sc = 0; rec = false; resetPend(idx); shuf(); prox(); }
     } else if (tela == ACERTO || tela == FEEDBACK) {
-      if (--wait <= 0 || fPr) { if (cur >= 10) { rec = finishGame(idx, sc); tela = FIM; dirty = true; } else prox(); }
+      if (--wait <= 0 || fPr) { if (cur >= MENU_QTD) { rec = finishGame(idx, sc); tela = FIM; dirty = true; } else prox(); }
     } else {
       if (uPr) { sel = (sel + 2) % 3; dirty = true; }
       if (dPr) { sel = (sel + 1) % 3; dirty = true; }
@@ -195,7 +202,7 @@ const CPP_MODULES = {
       drawCentered("CICLOFIS", 12, 2, ST7735_CYAN); drawCentered("Mudancas de estado fisico", 36, 1, COL_GRAY);
       drawCentered("ACAO: jogar | Segure 2s: menu", 104, 1, ST7735_GREEN);
     } else if (tela == FIM) {
-      drawRoundResult("FIM DA RODADA", ac, 10, sc, rec);
+      drawRoundResult("FIM DA RODADA", ac, MENU_QTD, sc, rec);
     } else if (tela == ACERTO) {
       drawCentered("CORRETO!", 44, 2, ST7735_GREEN); drawCentered("+10 pontos", 72, 1, ST7735_YELLOW);
     } else if (tela == FEEDBACK) {
@@ -204,7 +211,7 @@ const CPP_MODULES = {
       drawCentered(MUD[at.c], sz == 2 ? 32 : 36, sz, ST7735_YELLOW);
       drawCentered(SENT[at.c], 66, 1, ST7735_CYAN);
     } else {
-      drawTopHud(cur, 10, sc);
+      drawTopHud(cur, MENU_QTD, sc);
       textoQuebrado(6, 22, W - 12, 11, at.t, ST7735_WHITE);
       for (int i = 0; i < 3; i++) { char l[24]; snprintf(l, sizeof(l), "%d. %s", i + 1, MUD[opts[i]]); drawOptBtn(56 + i * 22, 18, l, i == sel); }
     }
@@ -213,7 +220,7 @@ const CPP_MODULES = {
     if (tela == TITULO || tela == FIM) {
       if (fPr) { cur = 0; ac = 0; sc = 0; rec = false; resetPend(idx); shuf(); prox(); }
     } else if (tela == ACERTO || tela == FEEDBACK) {
-      if (--wait <= 0 || fPr) { if (cur >= 10) { rec = finishGame(idx, sc); tela = FIM; dirty = true; } else prox(); }
+      if (--wait <= 0 || fPr) { if (cur >= MENU_QTD) { rec = finishGame(idx, sc); tela = FIM; dirty = true; } else prox(); }
     } else {
       if (uPr) { sel = (sel + 2) % 3; dirty = true; }
       if (dPr) { sel = (sel + 1) % 3; dirty = true; }
@@ -244,9 +251,16 @@ const CPP_MODULES = {
   enum Tela { TITULO, JOGANDO, ACERTO, FEEDBACK, FIM };
   Tela tela = TITULO; int pool[N], pPos = 0, opts[3], cur = 0, sel = 0, ac = 0, sc = 0, wait = 0, atIdx = 0;
   bool rec = false, dirty = true;
-  void shuf() { for (int i = 0; i < N; i++) pool[i] = i; for (int i = N - 1; i > 0; i--) { int j = random(0, i + 1); int t = pool[i]; pool[i] = pool[j]; pool[j] = t; } pPos = 0; }
+  void shuf() {
+    int k = 0;
+    for (int i = 0; i < N; i++) if (RM_REGIAO < 1 || RM_REGIAO > 5 || BANCO[i].r == RM_REGIAO) pool[k++] = i;
+    if (k == 0) { for (int i = 0; i < N; i++) pool[i] = i; k = N; }
+    for (int i = k - 1; i > 0; i--) { int j = random(0, i + 1); int t = pool[i]; pool[i] = pool[j]; pool[j] = t; }
+    pPos = 0;
+  }
   void prox() {
-    if (pPos >= N) shuf(); atIdx = pool[pPos++];
+    if (pPos >= N || (RM_REGIAO >= 1 && RM_REGIAO <= 5 && BANCO[pool[pPos]].r != RM_REGIAO)) shuf();
+    atIdx = pool[pPos++];
     int w1, w2; do { w1 = random(0, N); } while (w1 == atIdx); do { w2 = random(0, N); } while (w2 == atIdx || w2 == w1);
     opts[0] = atIdx; opts[1] = w1; opts[2] = w2;
     for (int i = 2; i > 0; i--) { int j = random(0, i + 1); int t = opts[i]; opts[i] = opts[j]; opts[j] = t; }
@@ -259,7 +273,7 @@ const CPP_MODULES = {
       drawCentered("REGIOMAP", 12, 2, ST7735_CYAN); drawCentered("Estados e capitais", 36, 1, COL_GRAY);
       drawCentered("ACAO: jogar | Segure 2s: menu", 104, 1, ST7735_GREEN);
     } else if (tela == FIM) {
-      drawRoundResult("FIM DA RODADA", ac, 10, sc, rec);
+      drawRoundResult("FIM DA RODADA", ac, MENU_QTD, sc, rec);
     } else if (tela == ACERTO) {
       drawCentered("CORRETO!", 44, 2, ST7735_GREEN); drawCentered("+10 pontos", 72, 1, ST7735_YELLOW);
     } else if (tela == FEEDBACK) {
@@ -269,7 +283,7 @@ const CPP_MODULES = {
       char reg[24]; snprintf(reg, sizeof(reg), "Regiao: %s", REGS[u.r]); drawCentered(reg, 80, 1, ST7735_YELLOW);
       drawCentered("ACAO: continuar", 108, 1, COL_GRAY);
     } else {
-      drawTopHud(cur, 10, sc);
+      drawTopHud(cur, MENU_QTD, sc);
       drawCentered(BANCO[atIdx].e, 28, 1, ST7735_YELLOW);
       for (int i = 0; i < 3; i++) { char l[24]; snprintf(l, sizeof(l), "%d. %s", i + 1, BANCO[opts[i]].c); drawOptBtn(52 + i * 23, 19, l, i == sel); }
     }
@@ -278,9 +292,9 @@ const CPP_MODULES = {
     if (tela == TITULO || tela == FIM) {
       if (fPr) { cur = 0; ac = 0; sc = 0; rec = false; resetPend(idx); shuf(); prox(); }
     } else if (tela == ACERTO) {
-      if (--wait <= 0 || fPr) { if (cur >= 10) { rec = finishGame(idx, sc); tela = FIM; dirty = true; } else prox(); }
+      if (--wait <= 0 || fPr) { if (cur >= MENU_QTD) { rec = finishGame(idx, sc); tela = FIM; dirty = true; } else prox(); }
     } else if (tela == FEEDBACK) {
-      if (fPr) { if (cur >= 10) { rec = finishGame(idx, sc); tela = FIM; dirty = true; } else prox(); }
+      if (fPr) { if (cur >= MENU_QTD) { rec = finishGame(idx, sc); tela = FIM; dirty = true; } else prox(); }
     } else {
       if (uPr) { sel = (sel + 2) % 3; dirty = true; }
       if (dPr) { sel = (sel + 1) % 3; dirty = true; }
@@ -308,7 +322,7 @@ const CPP_MODULES = {
     else { tft.fillTriangle(cx+6, cy, cx, cy-5, cx, cy+5, col); tft.fillRect(cx-6, cy-2, 6, 5, col); }
   }
   void gerar() {
-    cat = (uint8_t)random(1, 5);
+    cat = (AG_COMP == 1) ? 1 : (AG_COMP == 2) ? (uint8_t)random(1, 3) : (AG_COMP == 3) ? (uint8_t)random(3, 5) : (uint8_t)random(1, 5);
     if (cat == 1) {
       uint8_t a = random(0, 4), b; do { b = random(0, 4); } while (b == a);
       for (int i = 0; i < 6; i++) seq[i] = (i % 2 == 0) ? a : b; lac = random(4, 6);
@@ -337,7 +351,7 @@ const CPP_MODULES = {
       drawCentered("Sequencias Logicas", 44, 1, COL_GRAY);
       drawCentered("ACAO: jogar | Segure 2s: menu", 104, 1, ST7735_GREEN);
     } else if (tela == FIM) {
-      drawRoundResult("FIM DA PARTIDA", ac, 10, sc, rec);
+      drawRoundResult("FIM DA PARTIDA", ac, MENU_QTD, sc, rec);
     } else if (tela == ACERTO) {
       drawCentered("CORRETO!", 44, 2, ST7735_GREEN); drawCentered("+10 pontos", 72, 1, ST7735_YELLOW);
     } else if (tela == FEEDBACK) {
@@ -346,7 +360,7 @@ const CPP_MODULES = {
       tft.drawRoundRect(88, 54, 24, 24, 4, ST7735_GREEN); seta(100, 66, certa, ST7735_GREEN);
       tft.setTextColor(ST7735_GREEN); tft.setCursor(118, 63); tft.print(DN[certa]);
     } else {
-      drawTopHud(cur, 10, sc); drawCentered("Qual seta completa?", 26, 1, ST7735_WHITE);
+      drawTopHud(cur, MENU_QTD, sc); drawCentered("Qual seta completa?", 26, 1, ST7735_WHITE);
       int x0 = (W - (6 * 22 + 5 * 4)) / 2;
       for (int i = 0; i < 6; i++) {
         int bx = x0 + i * 26;
@@ -360,7 +374,7 @@ const CPP_MODULES = {
     if (tela == TITULO || tela == FIM) {
       if (fPr) { cur = 0; ac = 0; sc = 0; rec = false; resetPend(idx); gerar(); }
     } else if (tela == ACERTO || tela == FEEDBACK) {
-      if (--wait <= 0 || fPr) { if (cur >= 10) { rec = finishGame(idx, sc); tela = FIM; dirty = true; } else gerar(); }
+      if (--wait <= 0 || fPr) { if (cur >= MENU_QTD) { rec = finishGame(idx, sc); tela = FIM; dirty = true; } else gerar(); }
     } else {
       int esc = -1;
       if (uPr) esc = D_U; else if (dPr) esc = D_D; else if (lPr) esc = D_L; else if (rPr) esc = D_R;
@@ -375,11 +389,16 @@ const CPP_MODULES = {
 }`,
 };
 
-export function generateMenuIno(selectedIds) {
+export function generateMenuIno(selectedIds, opts = {}) {
   const chosen = AUTHORIAL_GAMES.filter((g) => selectedIds.includes(g.id));
   if (chosen.length < 2) {
     return '// Selecione pelo menos 2 jogos autorais para gerar o sketch com menu.';
   }
+  const pmTab = parseInt(opts.tabuada, 10) || 0;
+  const aqCat = parseInt(opts.acentoCat, 10) || 0;
+  const rmReg = parseInt(opts.regiao, 10) || 0;
+  const agComp = parseInt(opts.complexidade, 10) || 0;
+  const qtd = parseInt(opts.total, 10) || 10;
 
   const metaArray = chosen
     .map((g) => `  {"${g.id}", "${g.nome}", "${g.tag}"}`)
@@ -410,6 +429,11 @@ export function generateMenuIno(selectedIds) {
 #include <Preferences.h>
 
 const bool PEDIR_ALUNO = true;
+const int  PM_TABUADA  = ${pmTab};   // 0 = todas; 1..9 = tabuada fixa
+const int  AQ_CAT      = ${aqCat};   // 0 = todas; 1..3 = oxitonas/paroxitonas/proparoxitonas
+const int  RM_REGIAO   = ${rmReg};   // 0 = todas; 1..5 = regiao do Brasil
+const int  AG_COMP     = ${agComp};  // 0 = todos; 1..3 = nivel dos padroes
+const int  MENU_QTD    = ${qtd};     // perguntas/rodadas por partida nos quizzes/logica
 
 #define UP_BUTTON    32
 #define DOWN_BUTTON  33
@@ -698,24 +722,41 @@ export function initMenu({ makeConsole, addRunner, onSend }) {
       .map((el) => el.getAttribute('data-menu-game'));
   }
 
+  function readOpts() {
+    return {
+      tabuada: $('#menu-tab') ? parseInt($('#menu-tab').value, 10) : 0,
+      acentoCat: $('#menu-aq') ? parseInt($('#menu-aq').value, 10) : 0,
+      regiao: $('#menu-reg') ? parseInt($('#menu-reg').value, 10) : 0,
+      complexidade: $('#menu-ag') ? parseInt($('#menu-ag').value, 10) : 0,
+      total: $('#menu-qtd') ? parseInt($('#menu-qtd').value, 10) : 10,
+    };
+  }
+
   function refresh() {
     const ids = selectedIds();
+    const opts = readOpts();
     const items = ids
       .map((id) => AUTHORIAL_GAMES.find((g) => g.id === id))
       .filter(Boolean)
-      .map((g) => ({
-        id: g.id,
-        nome: g.nome,
-        tag: g.tag,
-        Cls: GAMES_BY_PREVIEW[g.id],
-        cfg: g.id === 'pixelmath' ? { v0: 0.8 } : { total: 10 },
-      }));
+      .map((g) => {
+        const cfg = { total: opts.total };
+        if (g.id === 'pixelmath') Object.assign(cfg, { v0: 0.8, tabuada: opts.tabuada });
+        else if (g.id === 'acentoquest') cfg.categoria = opts.acentoCat;
+        else if (g.id === 'regiomap') cfg.regiao = opts.regiao;
+        else if (g.id === 'algoritmando') cfg.complexidade = opts.complexidade;
+        return { id: g.id, nome: g.nome, tag: g.tag, Cls: GAMES_BY_PREVIEW[g.id], cfg };
+      });
 
     menuGame.setItems(items);
     menuGame.draw();
-    $('#menu-code').textContent = generateMenuIno(ids);
+    $('#menu-code').textContent = generateMenuIno(ids, opts);
     $('#menu-count').textContent = `${ids.length} de 5 jogos no menu`;
   }
+
+  ['#menu-tab', '#menu-aq', '#menu-reg', '#menu-ag', '#menu-qtd'].forEach((s) => {
+    const el = $(s);
+    if (el) el.addEventListener('change', refresh);
+  });
 
   $$('[data-menu-game]').forEach((cb) => {
     cb.addEventListener('change', () => {

@@ -69,7 +69,33 @@ function bindKeyboard(targets) {
   });
 }
 
+function initTheme() {
+  const btn = $('#btn-theme');
+  if (!btn) return;
+  const apply = (mode) => {
+    if (mode === 'dark' || mode === 'light') document.documentElement.setAttribute('data-theme', mode);
+    else document.documentElement.removeAttribute('data-theme');
+    const isDark = mode === 'dark' || (!mode && matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+    btn.textContent = isDark ? 'Tema: Escuro' : 'Tema: Claro';
+    btn.setAttribute('aria-pressed', String(isDark));
+  };
+  let saved = '';
+  try { saved = localStorage.getItem('esplay.theme') || ''; } catch (e) { /* ignora */ }
+  apply(saved);
+  btn.addEventListener('click', () => {
+    const curDark = document.documentElement.getAttribute('data-theme') === 'dark' ||
+      (!document.documentElement.getAttribute('data-theme') && matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+    const next = curDark ? 'light' : 'dark';
+    try { localStorage.setItem('esplay.theme', next); } catch (e) { /* ignora */ }
+    apply(next);
+  });
+}
+
 async function main() {
+  initTheme();
+  if (location.protocol === 'https:' && 'serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
   const [data] = await Promise.all([loadGames(), fontsReady]);
   const games = data.games || [];
 
@@ -84,7 +110,7 @@ async function main() {
     makeConsole,
     addRunner,
     onSend: send,
-    onRegisterMeta: (meta) => painel.registerGameMeta(meta),
+    onRegisterMeta: (meta, opts) => painel.registerGameMeta(meta, opts),
   });
 
   bindKeyboard([

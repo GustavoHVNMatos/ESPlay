@@ -10,6 +10,7 @@
 <meta property="og:locale" content="pt_BR">
 <meta property="og:title" content="ESPlay — Console maker educacional">
 <meta property="og:description" content="5 jogos educativos prontos, criador de quizzes personalizado, modo menu opcional e painel do professor via USB.">
+<meta property="og:image" content="img/case-esplay.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231F5EFF'/%3E%3Crect x='5' y='6' width='22' height='12' rx='2' fill='%2305070B'/%3E%3Crect x='7' y='21' width='7' height='3' fill='%23fff'/%3E%3Crect x='9' y='19' width='3' height='7' fill='%23fff'/%3E%3Ccircle cx='23' cy='23' r='3' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,6 +31,7 @@
       <a href="#professor">Professor</a>
       <a href="#guia">Guia</a>
     </nav>
+    <button class="btn small" type="button" id="btn-theme" aria-pressed="false">Tema: Claro</button>
   </div>
 </header>
 
@@ -118,9 +120,10 @@
           <li>1 display <b>TFT 1.8" 128×160 ST7735S</b> (SPI, modo paisagem 160×128)</li>
           <li>5 botões táteis</li>
           <li>Fios jumper ou solda em placa perfurada</li>
-          <li>Cabo USB que transmite dados</li>
+          <li>Cabo USB de dados e alimentação (PC, notebook ou power bank externo)</li>
           <li>Carcaça impressa em 3D (<span class="mono">CaseESPboyV5.stl</span>)</li>
         </ul>
+        <p class="muted">Alimentação externa pelo cabo USB (em computador, notebook ou power bank). Bateria interna foi descartada para manter a carcaça compacta.</p>
       </div>
       <div class="panel">
         <h3>Ligações</h3>
@@ -164,8 +167,19 @@
         <div class="downloads">
           <a class="btn primary" href="downloads/CaseESPboyV5.stl" download="CaseESPboyV5.stl">Baixar carcaça oficial (.stl)</a>
           <a class="btn" href="games/testebotoes.ino" download="TesteBotoes.ino">Baixar Teste de Botões (.ino)</a>
+          <a class="btn" href="img/esquema-ligacoes.svg" download="esquema-ligacoes.svg">Baixar esquema (.svg)</a>
         </div>
       </div>
+    </div>
+
+    <div class="panel wiring-panel">
+      <div class="qcard-head">
+        <h3>Esquema visual de ligações</h3>
+        <span class="muted small">Pinos confirmados no ESP32 DevKit V1 (30 pinos)</span>
+      </div>
+      <figure class="wiring-fig">
+        <img src="img/esquema-ligacoes.svg" alt="Diagrama das ligações entre o ESP32 DevKit V1, o display ST7735S e os cinco botões táteis, além da alimentação externa por cabo USB." loading="lazy">
+      </figure>
     </div>
   </section>
 
@@ -262,6 +276,49 @@
         <label class="check"><input type="checkbox" data-menu-game="algoritmando" checked> Algoritmando (Lógica)</label>
       </div>
       <p class="status" id="menu-status" role="status"></p>
+      <details class="datamenu" style="margin-top: 8px; margin-bottom: 0;">
+        <summary>Ajustes dos jogos do menu (opcional)</summary>
+        <div class="fields" style="margin-top: 12px;">
+          <label class="field" for="menu-tab">PixelMath: tabuada
+            <select id="menu-tab">
+              <option value="0">Todas</option>
+              <option value="1">Só do 1</option><option value="2">Só do 2</option><option value="3">Só do 3</option>
+              <option value="4">Só do 4</option><option value="5">Só do 5</option><option value="6">Só do 6</option>
+              <option value="7">Só do 7</option><option value="8">Só do 8</option><option value="9">Só do 9</option>
+            </select>
+          </label>
+          <label class="field" for="menu-aq">AcentoQuest: tipo
+            <select id="menu-aq">
+              <option value="0">Todas</option>
+              <option value="1">Oxítonas</option>
+              <option value="2">Paroxítonas</option>
+              <option value="3">Proparoxítonas</option>
+            </select>
+          </label>
+          <label class="field" for="menu-reg">RegioMap: região
+            <select id="menu-reg">
+              <option value="0">Todas</option>
+              <option value="1">Norte</option><option value="2">Nordeste</option><option value="3">Centro-Oeste</option>
+              <option value="4">Sudeste</option><option value="5">Sul</option>
+            </select>
+          </label>
+          <label class="field" for="menu-ag">Algoritmando: padrões
+            <select id="menu-ag">
+              <option value="0">Todos</option>
+              <option value="1">2 comandos</option>
+              <option value="2">2 e 3 comandos</option>
+              <option value="3">Opostos e pares</option>
+            </select>
+          </label>
+          <label class="field" for="menu-qtd">Perguntas/rodadas
+            <select id="menu-qtd">
+              <option value="5">5</option>
+              <option value="10" selected>10</option>
+              <option value="15">15</option>
+            </select>
+          </label>
+        </div>
+      </details>
     </div>
 
     <div class="menu-grid">
@@ -431,6 +488,14 @@
       <button class="btn" type="button" id="btn-paste">Colar dados</button>
     </div>
 
+    <div class="toolbar usb-row">
+      <label class="field" for="serial-sid">Nº do aluno no console (1–999)
+        <input id="serial-sid" type="number" min="1" max="999" placeholder="Ex.: 12">
+      </label>
+      <button class="btn small" type="button" id="btn-serial-id">Gravar nº no console (USB)</button>
+      <button class="btn small" type="button" id="btn-serial-reset">Zerar console (USB)</button>
+    </div>
+
     <div class="toolbar turmas-bar">
       <label class="field" for="f-turma">Turma
         <select id="f-turma"></select>
@@ -452,6 +517,14 @@
         <button class="btn small" type="button" id="btn-json-up">Abrir cópia (JSON)</button>
         <input type="file" id="file-json" accept="application/json,.json" hidden>
         <button class="btn small" type="button" id="btn-clear">Limpar tudo</button>
+      </div>
+      <div class="cuts-row">
+        <label class="field" for="cut-mid">Em desenvolvimento a partir de (%)
+          <input id="cut-mid" type="number" min="10" max="90" value="70">
+        </label>
+        <label class="field" for="cut-high">Consolidado a partir de (%)
+          <input id="cut-high" type="number" min="15" max="99" value="85">
+        </label>
       </div>
       <p class="note">O CSV usa ponto e vírgula e abre direto no Excel em português. A cópia (JSON) guarda tudo, inclusive nomes e turmas, para levar a outro computador. Quem recebe a cópia vê os nomes dos alunos.</p>
     </details>
@@ -492,7 +565,7 @@
 
     <div class="ficha-panel" id="ficha" hidden></div>
 
-    <p class="note">Nível pela taxa de acerto: abaixo de 70% precisa de apoio, de 70% a 84% em desenvolvimento, 85% ou mais consolidado. Os limites são uma sugestão inicial. O assunto que mais erra só aparece depois de 3 tentativas nele. A coluna Evolução mostra o acerto entre leituras seguidas, e a seta compara as duas últimas.</p>
+    <p class="note" id="p-cuts-note">Nível pela taxa de acerto: abaixo de 70% precisa de apoio, de 70% a 84% em desenvolvimento, 85% ou mais consolidado. Os limites são ajustáveis em Dados e arquivos. O assunto que mais erra só aparece depois de 3 tentativas nele. A coluna Evolução mostra o acerto entre leituras seguidas, e a seta compara as duas últimas.</p>
   </section>
 
   <section id="guia">
@@ -526,6 +599,14 @@
         <summary>Como compartilhar um jogo criado no Criador de jogos com outros professores?</summary>
         <p>No Criador de jogos, use <b>Salvar quiz (.json)</b> para passar as perguntas a outro professor (que pode reabrir em <b>Abrir quiz (.json)</b> e editar), ou baixe o <span class="mono">.ino</span> pronto direto para a Arduino IDE.</p>
       </details>
+      <details class="faq-item">
+        <summary>Como funciona a alimentação do console sem bateria interna?</summary>
+        <p>Como baterias internas ocupam muito espaço na carcaça, o console é alimentado externamente pelo cabo USB ligado a um <b>computador</b>, <b>notebook</b> ou <b>power bank</b> portátil. Assim o aparelho fica mais leve, seguro para uso escolar e pronto para ler os dados na mesma porta USB.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Como publicar este site gratuitamente na internet com USB funcionando?</summary>
+        <p>A pasta <span class="mono">public/</span> é totalmente estática e pode ser hospedada de graça com HTTPS automático no <b>GitHub Pages</b> (já configurado em <span class="mono">.github/workflows/pages.yml</span>), <b>Cloudflare Pages</b> ou <b>Netlify</b> (<span class="mono">netlify.toml</span> pronto). O HTTPS é obrigatório para o botão <b>Ler console pela USB</b> funcionar fora do <span class="mono">localhost</span>.</p>
+      </details>
     </div>
   </section>
 
@@ -535,8 +616,8 @@
       <h2>Próximos passos do projeto</h2>
     </div>
     <div class="road">
-      <div class="panel"><span class="tag soon">Teste em campo</span><h3>Validação dos 5 jogos e USB na escola</h3><p class="muted">Testar todos os sketches autônomos, o modo menu opcional e a leitura real via Web Serial com a turma.</p></div>
-      <div class="panel"><span class="tag soon">Hardware</span><h3>Alimentação portátil por bateria</h3><p class="muted">Definir módulo de bateria e carregador para o uso fora do cabo USB.</p></div>
+      <div class="panel"><span class="tag soon">Teste em campo</span><h3>Validação dos 5 jogos e USB na escola</h3><p class="muted">Testar todos os sketches autônomos, o modo menu opcional e a leitura/gravação de ID via Web Serial com a turma.</p></div>
+      <div class="panel"><span class="tag soon">Publicação</span><h3>Colocar o site no ar em HTTPS</h3><p class="muted">Publicar a pasta <span class="mono">public/</span> gratuitamente no GitHub Pages, Cloudflare Pages ou Netlify para uso direto nos laboratórios.</p></div>
       <div class="panel"><span class="tag soon">Futuro</span><h3>Gravação direta pelo navegador</h3><p class="muted">Avaliar envio de binários compilados direto via Web Serial, sem abrir a Arduino IDE.</p></div>
       <div class="panel"><span class="tag soon">Futuro</span><h3>Biblioteca comunitária</h3><p class="muted">Espaço para receber e publicar quizzes criados por professores de outras escolas.</p></div>
     </div>

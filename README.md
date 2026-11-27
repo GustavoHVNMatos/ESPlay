@@ -20,6 +20,7 @@ O `localhost` conta como endereço seguro, então a leitura do console pela USB 
 
 - **Placa:** ESP32 DevKit V1 (30 pinos)
 - **Display:** TFT 1.8" 128×160 ST7735S (SPI, paisagem `160×128`, `INITR_GREENTAB`, `setRotation(1)`)
+- **Alimentação:** externa via cabo USB (PC, notebook ou power bank externo)
 - **Ligações do display:** `VCC/BLK -> 3V3`, `GND -> GND`, `SCL -> GPIO 18`, `SDA -> GPIO 23`, `RST -> GPIO 4`, `DC -> GPIO 2`, `CS -> GPIO 5`
 - **Botões (`INPUT_PULLUP` para GND):** `CIMA -> 32`, `BAIXO -> 33`, `ESQUERDA -> 26`, `DIREITA -> 27`, `AÇÃO -> 25`
 - **Bibliotecas Arduino:** `Adafruit GFX Library` e `Adafruit ST7735 and ST7789 Library` (além de `Preferences` do core ESP32). Os sketches são autônomos e não dependem de biblioteca externa do ESPlay.
@@ -34,6 +35,8 @@ public/
   index.html                  página única
   styles.css
   img/case-esplay.png         render da carcaça oficial
+  img/esquema-ligacoes.svg    diagrama visual das ligações elétricas
+  sw.js                       cache offline para hospedagem HTTPS
   js/main.js                  ponto de entrada e roteamento de teclado
   js/util.js                  funções pequenas
   js/stlviewer.js             visualizador 3D WebGL/Canvas do STL
@@ -54,6 +57,10 @@ Os arquivos em `public/js` são módulos ES: o site precisa ser aberto pelo serv
 1. Edite o arquivo em `sketches/<Nome>/<Nome>.ino`.
 2. Rode `bun run sync` (ou `bun scripts/sync.ts`) para atualizar `public/games/`.
 
-## Publicar
+## Publicar gratuitamente (HTTPS obrigatório para USB / Web Serial)
 
-A pasta `public/` é o site inteiro e pode ir para o GitHub Pages, Netlify ou qualquer hospedagem estática. O servidor Bun só serve para testar localmente.
+A pasta `public/` é o site inteiro (sem etapa de build) e já inclui suporte offline (`sw.js`) quando publicada em HTTPS:
+
+1. **GitHub Pages (recomendado se usar GitHub):** já existe o workflow pronto em `.github/workflows/pages.yml`. Suba o projeto na branch `main` e ative **Settings → Pages → Source: GitHub Actions**.
+2. **Cloudflare Pages:** conecte o repositório e defina **Build output directory** como `public` (sem build command), ou faça upload direto da pasta `public/`.
+3. **Netlify:** o arquivo `netlify.toml` já aponta `publish = "public"` — basta conectar o repositório ou arrastar a pasta `public/` no painel do Netlify Drop.

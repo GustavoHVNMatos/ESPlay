@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 510" role="img" aria-labelledby="t d">
+  <title id="t">Esquema de ligações do ESPlay (ESP32 DevKit V1 + TFT ST7735S + 5 botões)</title>
+  <desc id="d">Diagrama das ligações validadas: display ST7735S nos pinos 3V3, GND, GPIO 18, 23, 4, 2 e 5; 5 botões nos GPIOs 32, 33, 26, 27 e 25 ligados ao GND; alimentação externa pelo cabo USB.</desc>
+  <style>
+    .bg { fill: #F8FAFB; }
+    .box { fill: #FFFFFF; stroke: #0E1B2A; stroke-width: 2.5; }
+    .hdr { fill: #0E1B2A; }
+    .ht { fill: #FFFFFF; font: 700 15px 'Atkinson Hyperlegible', system-ui, sans-serif; }
+    .lbl { fill: #0E1B2A; font: 700 12.5px 'JetBrains Mono', ui-monospace, monospace; }
+    .sub { fill: #4A5D72; font: 400 12px 'Atkinson Hyperlegible', system-ui, sans-serif; }
+    .pin { fill: #EDF1F4; stroke: #0E1B2A; stroke-width: 1.5; }
+    .w-pwr { stroke: #B8362F; stroke-width: 2.5; fill: none; }
+    .w-gnd { stroke: #0E1B2A; stroke-width: 2.5; fill: none; }
+    .w-spi { stroke: #1F5EFF; stroke-width: 2.5; fill: none; }
+    .w-btn { stroke: #16795A; stroke-width: 2.5; fill: none; }
+    .dot { fill: #0E1B2A; }
+    .usb { fill: #DCE6FF; stroke: #1F5EFF; stroke-width: 2; }
+  </style>
+
+  <rect class="bg" width="860" height="510" rx="12"/>
+  <text x="24" y="32" class="lbl" style="font-size:17px">ESPlay — Esquema de Ligação Validado</text>
+  <text x="24" y="52" class="sub">ESP32 DevKit V1 (30 pinos) · TFT 1.8" ST7735S (160×128 paisagem) · Alimentação externa via USB (PC, notebook ou power bank)</text>
+
+  <!-- Alimentação USB externa -->
+  <rect class="usb" x="24" y="70" width="256" height="54" rx="8"/>
+  <text x="40" y="93" class="lbl">Cabo USB (5V + Dados)</text>
+  <text x="40" y="112" class="sub">Notebook, computador ou power bank externo</text>
+  <path class="w-pwr" d="M 152 124 L 152 146"/>
+  <polygon points="146,140 158,140 152,150" fill="#B8362F"/>
+
+  <!-- ESP32 DevKit V1 -->
+  <rect class="box" x="24" y="150" width="256" height="328" rx="8"/>
+  <rect class="hdr" x="24" y="150" width="256" height="32" rx="6"/>
+  <text x="40" y="171" class="ht">ESP32 DevKit V1 (30 pinos)</text>
+
+  <text x="38" y="204" class="sub" style="font-weight:700">Display + Energia</text>
+  <text x="38" y="222" class="sub">Hardware VSPI</text>
+  <text x="38" y="240" class="sub">INITR_GREENTAB</text>
+  <text x="38" y="258" class="sub">setRotation(1)</text>
+
+  <text x="38" y="344" class="sub" style="font-weight:700">Botões (INPUT_PULLUP)</text>
+  <text x="38" y="362" class="sub">Sem resistor externo:</text>
+  <text x="38" y="380" class="sub">cada botão fecha do</text>
+  <text x="38" y="398" class="sub">pino GPIO para o GND</text>
+  <text x="38" y="438" class="sub">Sem bateria interna</text>
+  <text x="38" y="456" class="sub">(energia pela porta USB)</text>
+
+  <!-- Pinos direita do ESP32: Display -->
+  <rect class="pin" x="184" y="192" width="96" height="20"/><text x="192" y="206" class="lbl">3V3</text>
+  <rect class="pin" x="184" y="216" width="96" height="20"/><text x="192" y="230" class="lbl">GND</text>
+  <rect class="pin" x="184" y="240" width="96" height="20"/><text x="192" y="254" class="lbl">GPIO 18</text>
+  <rect class="pin" x="184" y="264" width="96" height="20"/><text x="192" y="278" class="lbl">GPIO 23</text>
+  <rect class="pin" x="184" y="288" width="96" height="20"/><text x="192" y="302" class="lbl">GPIO 4</text>
+  <rect class="pin" x="184" y="312" width="96" height="20"/><text x="192" y="326" class="lbl">GPIO 2</text>
+  <rect class="pin" x="184" y="336" width="96" height="20"/><text x="192" y="350" class="lbl">GPIO 5</text>
+
+  <!-- Pinos direita do ESP32: Botões -->
+  <rect class="pin" x="184" y="366" width="96" height="20"/><text x="192" y="380" class="lbl">GPIO 32</text>
+  <rect class="pin" x="184" y="388" width="96" height="20"/><text x="192" y="402" class="lbl">GPIO 33</text>
+  <rect class="pin" x="184" y="410" width="96" height="20"/><text x="192" y="424" class="lbl">GPIO 26</text>
+  <rect class="pin" x="184" y="432" width="96" height="20"/><text x="192" y="446" class="lbl">GPIO 27</text>
+  <rect class="pin" x="184" y="454" width="96" height="20"/><text x="192" y="468" class="lbl">GPIO 25</text>
+
+  <!-- Display TFT ST7735S -->
+  <rect class="box" x="512" y="72" width="324" height="236" rx="8"/>
+  <rect class="hdr" x="512" y="72" width="324" height="32" rx="6"/>
+  <text x="528" y="93" class="ht">Display TFT 1.8" ST7735S (SPI)</text>
+
+  <rect class="pin" x="512" y="118" width="144" height="20"/><text x="522" y="132" class="lbl">VCC + BLK</text>
+  <rect class="pin" x="512" y="142" width="144" height="20"/><text x="522" y="156" class="lbl">GND</text>
+  <rect class="pin" x="512" y="166" width="144" height="20"/><text x="522" y="180" class="lbl">SCL (SCK)</text>
+  <rect class="pin" x="512" y="190" width="144" height="20"/><text x="522" y="204" class="lbl">SDA (MOSI)</text>
+  <rect class="pin" x="512" y="214" width="144" height="20"/><text x="522" y="228" class="lbl">RST</text>
+  <rect class="pin" x="512" y="238" width="144" height="20"/><text x="522" y="252" class="lbl">DC</text>
+  <rect class="pin" x="512" y="262" width="144" height="20"/><text x="522" y="276" class="lbl">CS</text>
+
+  <rect x="676" y="122" width="142" height="128" rx="4" fill="#05070B" stroke="#0E1B2A" stroke-width="2"/>
+  <text x="747" y="180" text-anchor="middle" fill="#00E5FF" style="font:700 14px monospace">160 × 128</text>
+  <text x="747" y="200" text-anchor="middle" fill="#FFE600" style="font:700 11px monospace">paisagem</text>
+  <text x="747" y="274" text-anchor="middle" class="sub">128×160 físico</text>
+
+  <!-- Fios ESP32 -> TFT -->
+  <path class="w-pwr" d="M 280 202 L 336 202 L 336 128 L 512 128"/>
+  <path class="w-gnd" d="M 280 226 L 352 226 L 352 152 L 512 152"/>
+  <path class="w-spi" d="M 280 250 L 368 250 L 368 176 L 512 176"/>
+  <path class="w-spi" d="M 280 274 L 384 274 L 384 200 L 512 200"/>
+  <path class="w-spi" d="M 280 298 L 400 298 L 400 224 L 512 224"/>
+  <path class="w-spi" d="M 280 322 L 416 322 L 416 248 L 512 248"/>
+  <path class="w-spi" d="M 280 346 L 432 346 L 432 272 L 512 272"/>
+
+  <!-- 5 Botões -->
+  <rect class="box" x="512" y="324" width="324" height="154" rx="8"/>
+  <rect class="hdr" x="512" y="324" width="324" height="30" rx="6"/>
+  <text x="528" y="344" class="ht">5 Botões Táteis (para o GND)</text>
+
+  <text x="528" y="380" class="lbl">CIMA     ──[o  o]──┐</text>
+  <text x="528" y="402" class="lbl">BAIXO    ──[o  o]──┤</text>
+  <text x="528" y="424" class="lbl">ESQUERDA ──[o  o]──┼── GND comum</text>
+  <text x="528" y="446" class="lbl">DIREITA  ──[o  o]──┤</text>
+  <text x="528" y="468" class="lbl">AÇÃO     ──[o  o]──┘</text>
+
+  <!-- Fios ESP32 -> Botões + GND comum -->
+  <path class="w-btn" d="M 280 376 L 512 376"/>
+  <path class="w-btn" d="M 280 398 L 512 398"/>
+  <path class="w-btn" d="M 280 420 L 512 420"/>
+  <path class="w-btn" d="M 280 442 L 512 442"/>
+  <path class="w-btn" d="M 280 464 L 512 464"/>
+  <path class="w-gnd" d="M 352 226 L 352 486 L 748 486 L 748 430"/>
+  <circle class="dot" cx="352" cy="226" r="4"/>
+
+  <!-- Legenda -->
+  <line x1="24" y1="496" x2="50" y2="496" class="w-pwr"/><text x="56" y="500" class="sub">3V3 / USB 5V</text>
+  <line x1="150" y1="496" x2="176" y2="496" class="w-gnd"/><text x="182" y="500" class="sub">GND</text>
+  <line x1="230" y1="496" x2="256" y2="496" class="w-spi"/><text x="262" y="500" class="sub">SPI / Controle TFT</text>
+  <line x1="392" y1="496" x2="418" y2="496" class="w-btn"/><text x="424" y="500" class="sub">Botões (GPIOs 32, 33, 26, 27, 25)</text>
+</svg>

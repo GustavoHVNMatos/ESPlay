@@ -333,3 +333,13 @@ table.grid .spark { width: 80px; }
 .menu-grid { margin-top: 20px; display: grid; grid-template-columns: minmax(0, 440px) minmax(0, 1fr); gap: 24px; align-items: start; }
 .menu-grid > * { min-width: 0; }
 @media (max-width: 900px) { .viability-grid, .menu-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* ===== esquema visual, inputs numéricos e tema ===== */
+.wiring-panel { margin-top: 24px; }
+.wiring-fig { margin: 0; }
+.wiring-fig img { display: block; width: 100%; height: auto; border: 2px solid var(--ink); background: #F8FAFB; }
+input[type="number"] { font: 16px var(--f-body); color: var(--ink); background: var(--surface); border: 2px solid var(--ink); padding: 6px 10px; border-radius: 0; width: 110px; }
+.usb-row { align-items: flex-end; }
+.cuts-row { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; }
+.cuts-row input[type="number"] { width: 96px; }
+#btn-theme { white-space: nowrap; flex-shrink: 0; }

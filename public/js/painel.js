@@ -9,7 +9,7 @@ const NTAGS = 16;
 const DAY = 864e5;
 
 // leituras: cada vez que o professor lê um console, guarda-se uma foto dos números dele.
-const state = { turmas: [], alunos: {}, leituras: [], customGames: {}, examples: true, filtro: 'todas', ficha: null, barsGame: null };
+const state = { turmas: [], alunos: {}, leituras: [], customGames: {}, cutMid: 70, cutHigh: 85, examples: true, filtro: 'todas', ficha: null, barsGame: null };
 let seq = 0;
 let gamesById = {};
 let examplesCache = null;
@@ -29,6 +29,10 @@ function load() {
       state.alunos = o.alunos || {};
       state.leituras = o.leituras || [];
       state.customGames = o.customGames || {};
+      if (o.cutMid >= 10 && o.cutHigh <= 99 && o.cutMid < o.cutHigh) {
+        state.cutMid = o.cutMid;
+        state.cutHigh = o.cutHigh;
+      }
       state.examples = o.examples !== false;
       return;
     }
@@ -44,7 +48,10 @@ function load() {
 
 function save() {
   try {
-    localStorage.setItem(KEY2, JSON.stringify({ turmas: state.turmas, alunos: state.alunos, leituras: state.leituras, customGames: state.customGames, examples: state.examples }));
+    localStorage.setItem(KEY2, JSON.stringify({
+      turmas: state.turmas, alunos: state.alunos, leituras: state.leituras,
+      customGames: state.customGames, cutMid: state.cutMid, cutHigh: state.cutHigh, examples: state.examples,
+    }));
   } catch (e) { /* ignora */ }
 }
 
@@ -161,8 +168,8 @@ function metrics(r) {
 
 function nivel(taxa, plays) {
   if (!plays) return ['Sem dados', 'mid'];
-  if (taxa < 0.7) return ['Precisa de apoio', 'bad'];
-  if (taxa < 0.85) return ['Em desenvolvimento', 'mid'];
+  if (taxa < state.cutMid / 100) return ['Precisa de apoio', 'bad'];
+  if (taxa < state.cutHigh / 100) return ['Em desenvolvimento', 'mid'];
   return ['Consolidado', 'ok'];
 }
 
@@ -197,18 +204,20 @@ function trend(accs) {
   return '<span class="trend" title="Acerto estável">→</span>';
 }
 
-// Gráfico do acerto em cada leitura, com as linhas de 70% e 85% dos níveis.
+// Gráfico do acerto em cada leitura, com as linhas tracejadas dos cortes de nível configurados.
 // O eixo começa perto do menor valor (não em zero) para os pontos não ficarem amontoados no topo.
 function chartAcc(points) {
   const w = 560, h = 190, l = 44, r = 20, t = 22, b = 34, pad = 26;
   const n = points.length;
-  const lo = Math.max(0, Math.min(0.5, Math.floor(Math.min(...points.map((p) => p.acc)) * 10) / 10 - 0.1));
+  const cMid = state.cutMid / 100;
+  const cHigh = state.cutHigh / 100;
+  const lo = Math.max(0, Math.min(0.5, cMid - 0.1, Math.floor(Math.min(...points.map((p) => p.acc)) * 10) / 10 - 0.1));
   const x = (i) => (n === 1 ? l + (w - l - r) / 2 : l + pad + ((w - l - r - 2 * pad) * i) / (n - 1));
   const y = (v) => t + (h - t - b) * (1 - (v - lo) / (1 - lo));
-  const ticks = [lo, 0.7, 0.85, 1];
+  const ticks = [lo, cMid, cHigh, 1];
   let s = `<svg class="chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Acerto em cada leitura: ${points.map((p) => pct(p.acc) + '%').join(', ')}">`;
   ticks.forEach((v) => {
-    s += `<line class="${v === 0.7 || v === 0.85 ? 'ch-ref' : 'ch-grid'}" x1="${l}" x2="${w - r}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/>`;
+    s += `<line class="${v === cMid || v === cHigh ? 'ch-ref' : 'ch-grid'}" x1="${l}" x2="${w - r}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/>`;
     s += `<text class="ch-txt" x="${l - 6}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end">${pct(v)}%</text>`;
   });
   s += `<polyline class="ch-line" points="${points.map((p, i) => x(i).toFixed(1) + ',' + y(p.acc).toFixed(1)).join(' ')}"/>`;
@@ -341,7 +350,7 @@ function renderFicha(d, all) {
         ${withAcc.length >= 2
           ? chartAcc(withAcc)
           : '<p class="muted">Só há uma leitura deste aluno. Leia o console de novo depois de novas partidas para ver a evolução.</p>'}
-        <p class="note">Cada ponto compara os acertos e erros desde a leitura anterior. As linhas tracejadas marcam 70% e 85%. O eixo não começa em zero.</p>
+        <p class="note">Cada ponto compara os acertos e erros desde a leitura anterior. As linhas tracejadas marcam ${state.cutMid}% e ${state.cutHigh}%. O eixo não começa em zero.</p>
       </div>
       <div>
         <h4>Onde mais erra</h4>
@@ -371,6 +380,10 @@ function render() {
   renderBars(shown);
   renderFicha(d, all);
   $('#banner').hidden = !state.examples;
+  const cm = $('#cut-mid'), ch = $('#cut-high'), cn = $('#p-cuts-note');
+  if (cm) cm.value = String(state.cutMid);
+  if (ch) ch.value = String(state.cutHigh);
+  if (cn) cn.textContent = `Nível pela taxa de acerto: abaixo de ${state.cutMid}% precisa de apoio, de ${state.cutMid}% a ${state.cutHigh - 1}% em desenvolvimento, ${state.cutHigh}% ou mais consolidado. O assunto que mais erra só aparece depois de 3 tentativas nele. A coluna Evolução mostra o acerto entre leituras seguidas, e a seta compara as duas últimas.`;
 }
 
 /* ================= Adicionar leituras ================= */
@@ -401,7 +414,7 @@ function addReading(o, opts) {
   return 'novo';
 }
 
-function registerGameMeta(meta) {
+function registerGameMeta(meta, opts) {
   if (!meta || !meta.id) return;
   state.customGames[meta.id] = {
     id: String(meta.id),
@@ -410,7 +423,7 @@ function registerGameMeta(meta) {
     tagRotulos: meta.tagRotulos || {},
   };
   save();
-  render();
+  if (!opts || !opts.silent) render();
 }
 
 function addFromText(text) {
@@ -611,17 +624,33 @@ export function initPainel({ games }) {
     setStatus('Todos os dados foram apagados deste navegador.');
   });
 
-  // leitura pela porta serial (Chrome e Edge no computador; aceita 1 jogo ou vários no modo menu)
-  $('#btn-serial').addEventListener('click', async () => {
-    if (!('serial' in navigator)) { setStatus('Este navegador não tem acesso à porta USB. Use o Chrome ou o Edge no computador, ou use Colar dados.'); return; }
+  // cortes de nível configuráveis
+  const applyCuts = () => {
+    let m = parseInt($('#cut-mid').value, 10) || 70;
+    let h = parseInt($('#cut-high').value, 10) || 85;
+    m = Math.max(10, Math.min(90, m));
+    h = Math.max(m + 5, Math.min(99, h));
+    state.cutMid = m; state.cutHigh = h;
+    save(); render();
+    setStatus(`Cortes atualizados: apoio < ${m}% e consolidado >= ${h}%.`);
+  };
+  if ($('#cut-mid')) $('#cut-mid').addEventListener('change', applyCuts);
+  if ($('#cut-high')) $('#cut-high').addEventListener('change', applyCuts);
+
+  // auxiliar compartilhado para comandos seriais (115200 baud, Chrome/Edge)
+  async function runSerial(cmd, onLine) {
+    if (!('serial' in navigator)) {
+      setStatus('Este navegador não tem acesso à porta USB. Use o Chrome ou o Edge no computador, ou use Colar dados.');
+      return { ok: false, aborted: true };
+    }
     let port, reader, writer, closed, timer, settleTimer;
-    const counts = { novo: 0, igual: 0 };
+    let gotAny = false;
     try {
       port = await navigator.serial.requestPort();
       await port.open({ baudRate: 115200 });
     } catch (e) {
       setStatus('Não foi possível abrir a porta. Se esta página estiver dentro de outra, abra-a em uma aba própria, ou use Colar dados.');
-      return;
+      return { ok: false, aborted: true };
     }
     setStatus('Conectado. Aguardando o console responder (cerca de 3 segundos)…');
     try {
@@ -630,10 +659,10 @@ export function initPainel({ games }) {
       reader = dec.readable.getReader();
       writer = port.writable.getWriter();
       const enc = new TextEncoder();
-      const send = () => writer.write(enc.encode('ESPLAY?\n')).catch(() => {});
+      const send = () => writer.write(enc.encode(cmd + '\n')).catch(() => {});
       setTimeout(send, 1500);
-      setTimeout(() => { if (!counts.novo && !counts.igual) send(); }, 3500);
-      timer = setTimeout(() => reader.cancel().catch(() => {}), 9000);
+      setTimeout(() => { if (!gotAny) send(); }, 3500);
+      timer = setTimeout(() => reader.cancel().catch(() => {}), 8500);
       let buf = '';
       while (true) {
         const res = await reader.read();
@@ -643,22 +672,18 @@ export function initPainel({ games }) {
         while ((k = buf.indexOf('\n')) >= 0) {
           const line = buf.slice(0, k).trim();
           buf = buf.slice(k + 1);
-          if (line === 'ESPLAY_END' && (counts.novo || counts.igual)) {
+          const action = onLine(line);
+          if (action === 'done') {
+            gotAny = true;
             clearTimeout(timer);
             clearTimeout(settleTimer);
             await reader.cancel();
             break;
-          }
-          if (line.charAt(0) === '{') {
-            try {
-              const out = addReading(JSON.parse(line));
-              if (out) {
-                counts[out]++;
-                clearTimeout(timer);
-                clearTimeout(settleTimer);
-                settleTimer = setTimeout(() => reader.cancel().catch(() => {}), 450);
-              }
-            } catch (e) { /* linha que não é JSON */ }
+          } else if (action === 'got') {
+            gotAny = true;
+            clearTimeout(timer);
+            clearTimeout(settleTimer);
+            settleTimer = setTimeout(() => reader.cancel().catch(() => {}), 450);
           }
         }
       }
@@ -669,12 +694,73 @@ export function initPainel({ games }) {
       try { if (closed) await closed; } catch (e) { /* ignora */ }
       try { await port.close(); } catch (e) { /* ignora */ }
     }
+    return { ok: gotAny, aborted: false };
+  }
+
+  // leitura pela porta serial (aceita 1 jogo ou vários no modo menu)
+  $('#btn-serial').addEventListener('click', async () => {
+    const counts = { novo: 0, igual: 0 };
+    const r = await runSerial('ESPLAY?', (line) => {
+      if (line === 'ESPLAY_END' && (counts.novo || counts.igual)) return 'done';
+      if (line.charAt(0) === '{') {
+        try {
+          const out = addReading(JSON.parse(line));
+          if (out) { counts[out]++; return 'got'; }
+        } catch (e) { /* linha que não é JSON */ }
+      }
+      return null;
+    });
+    if (r.aborted) return;
     setStatus(
       counts.novo > 0
         ? `${counts.novo} ${counts.novo === 1 ? 'leitura salva' : 'leituras salvas'}. Troque de console e leia o próximo aluno.`
         : counts.igual > 0
           ? 'Esse console não tem partidas novas desde a última leitura.'
           : 'O console não respondeu. Confira se há um jogo do ESPlay gravado e tente de novo.'
+    );
+  });
+
+  // gravar número do aluno no console pela USB (ID <n>)
+  $('#btn-serial-id').addEventListener('click', async () => {
+    const n = parseInt($('#serial-sid').value, 10);
+    if (!Number.isInteger(n) || n < 1 || n > 999) {
+      setStatus('Digite um número de aluno entre 1 e 999 antes de gravar.');
+      $('#serial-sid').focus();
+      return;
+    }
+    let reply = '';
+    const r = await runSerial(`ID ${n}`, (line) => {
+      if (line === 'OK' || line === 'ERRO') { reply = line; return 'done'; }
+      return null;
+    });
+    if (r.aborted) return;
+    setStatus(
+      reply === 'OK'
+        ? `Número ${n} gravado no console conectado.`
+        : 'O console não confirmou o número. Confira o cabo USB e tente de novo.'
+    );
+  });
+
+  // zerar estatísticas do jogo no console pela USB (RESET)
+  $('#btn-serial-reset').addEventListener('click', async function () {
+    if (this.dataset.arm !== '1') {
+      this.dataset.arm = '1';
+      this.textContent = 'Clique de novo para zerar console';
+      setTimeout(() => { this.dataset.arm = ''; this.textContent = 'Zerar console (USB)'; }, 3000);
+      return;
+    }
+    this.dataset.arm = '';
+    this.textContent = 'Zerar console (USB)';
+    let reply = '';
+    const r = await runSerial('RESET', (line) => {
+      if (line === 'OK') { reply = 'OK'; return 'done'; }
+      return null;
+    });
+    if (r.aborted) return;
+    setStatus(
+      reply === 'OK'
+        ? 'Estatísticas zeradas na memória do console.'
+        : 'O console não respondeu ao RESET. Confira o cabo USB e tente de novo.'
     );
   });
 
